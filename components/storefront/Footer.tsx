@@ -126,6 +126,11 @@ export function Footer() {
             </h5>
             <ul className="space-y-2 text-xs sm:text-[13px] text-stone-400">
               <li>
+                <Link href="/about" className="hover:text-white transition-colors text-left block">
+                  Our Purpose &amp; Story
+                </Link>
+              </li>
+              <li>
                 <button
                   onClick={() => setPolicyModalTab("size-guide")}
                   className="hover:text-white transition-colors text-left"

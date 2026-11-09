@@ -71,7 +71,7 @@ export function Header() {
   const leftNavLinks = [
     { label: "Shop", href: "/products" },
     { label: "Collections", href: "/#categories" },
-    { label: "About", href: "/#about-us" },
+    { label: "About", href: "/about" },
     {
       label: "Contact",
       href: "https://wa.me/917406322818?text=Hi%20Noomi%27s%20Couture%2C%20I%20have%20an%20inquiry",
