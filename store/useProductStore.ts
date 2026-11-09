@@ -2,25 +2,25 @@ import { create } from "zustand";
 import { Product } from "@/types/store";
 import { products as fallbackProducts } from "@/data/mockData";
 
-const STORAGE_KEY = "gleamnest_catalog_live_v8";
+const STORAGE_KEY = "noomis_catalog_live_v8";
 
 // Auto-purge obsolete and legacy catalog cache keys from previous versions
 if (typeof window !== "undefined") {
   try {
-    localStorage.removeItem("gleamnest_products_catalog");
-    localStorage.removeItem("gleamnest_products_catalog_v2");
-    localStorage.removeItem("gleamnest_products_catalog_v3");
-    localStorage.removeItem("gleamnest_catalog_live_v4");
-    localStorage.removeItem("gleamnest_catalog_live_v5");
-    localStorage.removeItem("gleamnest_catalog_live_v6");
-    localStorage.removeItem("gleamnest_catalog_live_v7");
-    sessionStorage.removeItem("gleamnest_products_catalog");
-    sessionStorage.removeItem("gleamnest_products_catalog_v2");
-    sessionStorage.removeItem("gleamnest_products_catalog_v3");
-    sessionStorage.removeItem("gleamnest_catalog_live_v4");
-    sessionStorage.removeItem("gleamnest_catalog_live_v5");
-    sessionStorage.removeItem("gleamnest_catalog_live_v6");
-    sessionStorage.removeItem("gleamnest_catalog_live_v7");
+    localStorage.removeItem("noomis_products_catalog");
+    localStorage.removeItem("noomis_products_catalog_v2");
+    localStorage.removeItem("noomis_products_catalog_v3");
+    localStorage.removeItem("noomis_catalog_live_v4");
+    localStorage.removeItem("noomis_catalog_live_v5");
+    localStorage.removeItem("noomis_catalog_live_v6");
+    localStorage.removeItem("noomis_catalog_live_v7");
+    sessionStorage.removeItem("noomis_products_catalog");
+    sessionStorage.removeItem("noomis_products_catalog_v2");
+    sessionStorage.removeItem("noomis_products_catalog_v3");
+    sessionStorage.removeItem("noomis_catalog_live_v4");
+    sessionStorage.removeItem("noomis_catalog_live_v5");
+    sessionStorage.removeItem("noomis_catalog_live_v6");
+    sessionStorage.removeItem("noomis_catalog_live_v7");
   } catch (e) {}
 }
 

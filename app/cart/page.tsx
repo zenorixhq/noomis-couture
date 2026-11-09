@@ -36,16 +36,10 @@ export default function CartPage() {
 
   // Instant memoized calculations directly from in-memory cart items
   const { subtotal, discount, shipping, tax, total } = useMemo(() => {
-    const isQatar = selectedCurrency === "QAR";
     let sub = 0;
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
-      const price = isQatar
-        ? it.priceQatar !== undefined && it.priceQatar !== null
-          ? it.priceQatar
-          : Math.max(10, Math.round(it.price / 20))
-        : it.price;
-      sub += price * it.quantity;
+      sub += it.price * it.quantity;
     }
 
     let disc = 0;
@@ -57,7 +51,7 @@ export default function CartPage() {
     }
 
     let ship = 0;
-    if (sub > 0 && !isQatar && sub < storeConfig.commerce.freeShippingThreshold) {
+    if (sub > 0 && sub < storeConfig.commerce.freeShippingThreshold) {
       ship = storeConfig.commerce.flatShippingFee;
     }
 
@@ -66,12 +60,11 @@ export default function CartPage() {
     const tot = Math.max(0, sub - disc + ship + tx);
 
     return { subtotal: sub, discount: disc, shipping: ship, tax: tx, total: tot };
-  }, [items, appliedCoupon, selectedCurrency]);
+  }, [items, appliedCoupon]);
 
-  const isQatar = selectedCurrency === "QAR";
   const freeShippingThreshold = storeConfig.commerce.freeShippingThreshold;
-  const progressPercent = isQatar ? 100 : Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
-  const amountNeeded = isQatar ? 0 : Math.max(0, freeShippingThreshold - subtotal);
+  const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
+  const amountNeeded = Math.max(0, freeShippingThreshold - subtotal);
 
   if (!mounted) {
     return (
@@ -121,12 +114,7 @@ export default function CartPage() {
         <div className="flex items-center justify-between text-xs font-semibold mb-2">
           <span className="flex items-center gap-2 text-foreground">
             <Truck className="w-4 h-4 text-primary" />
-            {isQatar ? (
-              <span className="text-emerald-700 font-bold flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                Congratulations! Free Delivery across Qatar is included on all orders.
-              </span>
-            ) : amountNeeded === 0 ? (
+            {amountNeeded === 0 ? (
               <span className="text-emerald-600 font-bold flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 Congratulations! You qualified for Complimentary Shipping.
@@ -172,7 +160,7 @@ export default function CartPage() {
                   decoding="async"
                   className="w-full h-full object-contain rounded-lg max-w-full max-h-full"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                    (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                   }}
                 />
               </div>
@@ -223,14 +211,7 @@ export default function CartPage() {
                   </div>
 
                   <span className="text-sm font-black text-foreground">
-                    {formatPrice(
-                      (isQatar
-                        ? item.priceQatar !== undefined && item.priceQatar !== null
-                          ? item.priceQatar
-                          : Math.max(10, Math.round(item.price / 20))
-                        : item.price) * item.quantity,
-                      selectedCurrency
-                    )}
+                    {formatPrice(item.price * item.quantity, selectedCurrency)}
                   </span>
                 </div>
               </div>
@@ -262,7 +243,7 @@ export default function CartPage() {
             ) : null}
             <div className="flex justify-between text-muted-foreground">
               <span>Shipping</span>
-              <span>{shipping === 0 ? (isQatar ? "FREE (Qatar Express)" : "FREE") : formatPrice(shipping, selectedCurrency)}</span>
+              <span>{shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Estimated Tax</span>

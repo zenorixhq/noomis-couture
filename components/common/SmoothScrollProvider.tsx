@@ -1,44 +1,22 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import Lenis from "lenis";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
-  const lenisRef = useRef<Lenis | null>(null);
   const pathname = usePathname();
 
+  // Reset scroll to top on route change
   useEffect(() => {
-    // Respect user accessibility preference
-    if (typeof window === "undefined") return;
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion) return;
-
-    // Initialize Lenis with luxury momentum deceleration tuned for 60-120fps displays
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      wheelMultiplier: 0.95,
-      touchMultiplier: 1.0,
-      syncTouch: false, // Keep native 120Hz capacitive touch on mobile/tablets with zero lag
-      autoRaf: false,
-    });
-
-    lenisRef.current = lenis;
-    (window as any).__lenis = lenis;
-
-    // High FPS animation frame loop
-    let rafId: number;
-    function update(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(update);
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
     }
-    rafId = requestAnimationFrame(update);
+  }, [pathname]);
 
-    // Smoothly scroll to in-page anchor links (e.g., #reviews, #categories, #about)
+  // Smooth anchor scrolling (e.g., #categories, #about, #reviews)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement)?.closest("a");
       if (!target) return;
@@ -47,45 +25,27 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
         const el = document.querySelector(href);
         if (el) {
           e.preventDefault();
-          lenis.scrollTo(el as HTMLElement, { offset: -90, duration: 1.2 });
+          const yOffset = -80; // Account for fixed glass header
+          const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
         }
       }
     };
+
     document.addEventListener("click", handleAnchorClick, { passive: false });
 
-    // Watch for modal scroll locks (document.body.style.overflow = "hidden")
-    const observer = new MutationObserver(() => {
-      const isLocked = document.body.style.overflow === "hidden";
-      if (isLocked) {
-        lenis.stop();
-      } else {
-        lenis.start();
-      }
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["style", "class"],
-    });
+    // Clean up any stale overflow lock on mount
+    if (document.body.style.overflow === "hidden") {
+      document.body.style.overflow = "";
+    }
+    if (document.documentElement.style.overflow === "hidden") {
+      document.documentElement.style.overflow = "";
+    }
 
     return () => {
-      cancelAnimationFrame(rafId);
       document.removeEventListener("click", handleAnchorClick);
-      observer.disconnect();
-      lenis.destroy();
-      lenisRef.current = null;
-      delete (window as any).__lenis;
     };
   }, []);
-
-  // When pathname changes, immediately reset scroll to top without fighting page transition
-  useEffect(() => {
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
-    } else if (typeof window !== "undefined") {
-      window.scrollTo(0, 0);
-    }
-  }, [pathname]);
 
   return <>{children}</>;
 }

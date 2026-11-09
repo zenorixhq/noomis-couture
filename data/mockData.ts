@@ -2,36 +2,12 @@ import { Product, Category, Order } from "@/types/store";
 
 export const categories: Category[] = [
   {
-    "id": "cat-new-arrivals",
-    "slug": "new-arrivals",
-    "name": "✦ New Arrivals",
-    "description": "Our latest seasonal drops in 304 & 306 grade stainless steel waterproof jewelry.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/new-arrivals-1793372908648.jpg",
-    "productCount": 0
-  },
-  {
-    "id": "cat-necklaces-and-chains",
-    "slug": "necklaces-and-chains",
-    "name": "Necklaces and Chains",
-    "description": "Everyday anti-tarnish chains, pendants, and layering necklaces in 304 & 306 grade stainless steel.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/necklaces-and-chains-1793372908704.jpg",
+    "id": "cat-bangles",
+    "slug": "bangles",
+    "name": "Bangles",
+    "description": "Rigid luxury bangles, open-cuff kadas, and screw-lock everyday bangles in 304 & 316L steel.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/bangles-kada-1793372909246.jpg",
     "productCount": 12
-  },
-  {
-    "id": "cat-rings",
-    "slug": "rings",
-    "name": "Rings",
-    "description": "Waterproof adjustable rings, statement bands, and stackable sets.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/rings-1793372908809.jpg",
-    "productCount": 11
-  },
-  {
-    "id": "cat-earrings",
-    "slug": "earrings",
-    "name": "Earrings",
-    "description": "Hypoallergenic hoops, contemporary drop earrings, and dainty daily studs.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/earrings-1793372908889.jpg",
-    "productCount": 9
   },
   {
     "id": "cat-bracelets",
@@ -42,11 +18,19 @@ export const categories: Category[] = [
     "productCount": 19
   },
   {
-    "id": "cat-bangles-kada",
-    "slug": "bangles-kada",
-    "name": "Bangles Kada",
-    "description": "Rigid luxury bangles, open-cuff kadas, and screw-lock everyday bangles.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/bangles-kada-1793372909246.jpg",
+    "id": "cat-charm-necklace",
+    "slug": "charm-necklace",
+    "name": "Charm Necklace",
+    "description": "Interchangeable charm necklaces, dainty lockets, and radiant everyday pieces.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/charms-1793372909349.jpg",
+    "productCount": 33
+  },
+  {
+    "id": "cat-pendants",
+    "slug": "pendants",
+    "name": "Pendants",
+    "description": "Solitaire stones, clover medallions, and minimal layering pendants.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/necklaces-and-chains-1793372908704.jpg",
     "productCount": 12
   },
   {
@@ -58,18 +42,18 @@ export const categories: Category[] = [
     "productCount": 0
   },
   {
-    "id": "cat-charms",
-    "slug": "charms",
-    "name": "Charms",
-    "description": "Interchangeable gemstone, clover, and botanical pendant charms for chains and bracelets.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/charms-1793372909349.jpg",
-    "productCount": 33
+    "id": "cat-rings",
+    "slug": "rings",
+    "name": "Rings",
+    "description": "Waterproof adjustable rings, statement bands, and stackable sets.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/rings-1793372908809.jpg",
+    "productCount": 11
   },
   {
-    "id": "cat-hip-chains",
-    "slug": "hip-chains",
-    "name": "Hip Chains",
-    "description": "Delicate and bold waist chains, anti-tarnish belly chains crafted for enduring daily wear.",
+    "id": "cat-hand-chains",
+    "slug": "hand-chains",
+    "name": "Hand Chains",
+    "description": "Delicate ring-to-wrist hand harness chains in radiant 18K mirror gold finish.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/hip-chains-1793372909411.jpg",
     "productCount": 0
   },
@@ -82,11 +66,19 @@ export const categories: Category[] = [
     "productCount": 0
   },
   {
-    "id": "cat-kids-collection",
-    "slug": "kids-collection",
-    "name": "Kids",
-    "description": "Gentle bell charms, mini studs, and lightweight hypoallergenic pieces safe for sensitive skin.",
-    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/kids-collection-1793372909509.jpg",
+    "id": "cat-earrings",
+    "slug": "earrings",
+    "name": "Earrings",
+    "description": "Hypoallergenic hoops, contemporary drop earrings, and dainty daily studs.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/earrings-1793372908889.jpg",
+    "productCount": 9
+  },
+  {
+    "id": "cat-mangalsutra",
+    "slug": "mangalsutra",
+    "name": "Mangalsutra",
+    "description": "Modern minimalist mangalsutra designs in waterproof 304 steel with auspicious black beads.",
+    "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800",
     "productCount": 0
   }
 ];

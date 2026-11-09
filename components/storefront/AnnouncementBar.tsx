@@ -11,35 +11,26 @@ export function AnnouncementBar() {
   const [visible, setVisible] = useState(true);
   const selectedCurrency = useCartStore((s) => s.selectedCurrency);
 
-  if (pathname?.startsWith("/admin") || !storeConfig.features.enableAnnouncementBar || !visible) {
+  // On homepage, hero accommodates the entire window with the glass navbar at top-0
+  if (pathname === "/" || pathname?.startsWith("/admin") || !storeConfig.features.enableAnnouncementBar || !visible) {
     return null;
   }
 
-  const isQatar = selectedCurrency === "QAR";
-
-  const tickerItems = isQatar
-    ? [
-        "100% Anti-Tarnish & Waterproof",
-        "5% OFF on Your 1st Purchase",
-        "Premium 304 & 306 Grade Stainless Steel",
-        "Free Delivery Across Qatar (Within 14 Days)",
-        "Hypoallergenic & Shower Safe",
-        "Order Directly on WhatsApp",
-      ]
-    : [
-        "100% Anti-Tarnish & Waterproof",
-        "5% OFF on Your 1st Purchase",
-        "Premium 304 & 306 Grade Stainless Steel",
-        `Free Pan-India Delivery Above ₹${storeConfig.commerce.freeShippingThreshold}`,
-        `Express Shipping Only ₹${storeConfig.commerce.flatShippingFee}`,
-        "Hypoallergenic & Shower Safe",
-        "Order Directly on WhatsApp",
-      ];
+  const tickerItems = [
+    "Noomi's Couture • Wear Your Confidence",
+    "100% Anti-Tarnish & Waterproof",
+    "5% OFF On First Purchase with Code NOOMI5",
+    "Premium 304 & 306 Grade Stainless Steel",
+    `Free Pan-India Delivery Above ₹${storeConfig.commerce.freeShippingThreshold}`,
+    `Express Shipping Only ₹${storeConfig.commerce.flatShippingFee}`,
+    "Hypoallergenic & Shower Safe",
+    "Secure Online Payment & Instant Confirmation",
+  ];
 
   return (
     <aside
       aria-label="Store Announcement Ticker"
-      className="bg-[#1C1917] text-[#FAF5EB] py-2 text-xs font-medium relative overflow-hidden select-none border-b border-[#332E27]"
+      className="bg-[#3D1217] text-[#FAF5EB] py-2 text-xs font-medium relative overflow-hidden select-none border-b border-[#581A22]"
     >
       <div className="flex items-center overflow-hidden w-full pr-10">
         <div className="animate-marquee flex items-center gap-8 py-0.5 whitespace-nowrap">

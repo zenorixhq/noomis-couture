@@ -245,7 +245,7 @@ export function BrandValueBadges() {
                 <span className="text-[#C5A059] text-[10px] sm:text-xs hidden md:inline shrink-0">✦</span>
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-[#1C1917] text-[#FAF5EB] group-hover:bg-[#000000] text-[11px] sm:text-xs md:text-sm font-bold tracking-wider transition-colors shadow-sm shrink-0 whitespace-nowrap">
+              <div className="flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-[#4A171C] text-[#FAF5EB] group-hover:bg-[#360F13] text-[11px] sm:text-xs md:text-sm font-bold tracking-wider transition-colors shadow-sm shrink-0 whitespace-nowrap border border-[#C5A059]/40">
                 <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#25D366] fill-[#25D366]" />
                 <span>{storeConfig.brand.contact.phone}</span>
               </div>

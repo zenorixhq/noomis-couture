@@ -50,6 +50,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { upload } from "@vercel/blob/client";
+import { WhatsAppConfirmationModal } from "@/components/admin/WhatsAppConfirmationModal";
 
 export default function AdminDashboardPage() {
   // Authentication State
@@ -58,11 +59,12 @@ export default function AdminDashboardPage() {
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [selectedOrderForWhatsApp, setSelectedOrderForWhatsApp] = useState<Order | null>(null);
 
   const [orders, setOrders] = useState<Order[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_admin_orders");
+        const cached = sessionStorage.getItem("noomis_admin_orders");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -88,13 +90,13 @@ export default function AdminDashboardPage() {
   const [categoriesList, setCategoriesList] = useState<Category[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_categories");
+        const cached = sessionStorage.getItem("noomis_categories");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0 && !parsed.some((c: any) => c.image?.includes("photo-1573408301185"))) {
             return parsed;
           }
-          sessionStorage.removeItem("gleamnest_categories");
+          sessionStorage.removeItem("noomis_categories");
         }
       } catch (e) {}
     }
@@ -115,7 +117,7 @@ export default function AdminDashboardPage() {
   const [reviewsList, setReviewsList] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_admin_reviews");
+        const cached = sessionStorage.getItem("noomis_admin_reviews");
         if (cached) return JSON.parse(cached);
       } catch (e) {}
     }
@@ -124,13 +126,13 @@ export default function AdminDashboardPage() {
   const [videosList, setVideosList] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_admin_videos");
+        const cached = sessionStorage.getItem("noomis_admin_videos");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && !parsed.some((v: any) => v.poster?.startsWith("data:image/webp") || v.poster?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
-          sessionStorage.removeItem("gleamnest_admin_videos");
+          sessionStorage.removeItem("noomis_admin_videos");
         }
       } catch (e) {}
     }
@@ -139,13 +141,13 @@ export default function AdminDashboardPage() {
   const [feedbackScreenshotsList, setFeedbackScreenshotsList] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_admin_screenshots");
+        const cached = sessionStorage.getItem("noomis_admin_screenshots");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && !parsed.some((s: any) => s.imageUrl?.startsWith("data:image/webp") || s.imageUrl?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
-          sessionStorage.removeItem("gleamnest_admin_screenshots");
+          sessionStorage.removeItem("noomis_admin_screenshots");
         }
       } catch (e) {}
     }
@@ -154,13 +156,13 @@ export default function AdminDashboardPage() {
   const [instagramVideosList, setInstagramVideosList] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_admin_instavideos");
+        const cached = sessionStorage.getItem("noomis_admin_instavideos");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && !parsed.some((v: any) => v.poster?.startsWith("data:image/webp") || v.poster?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
-          sessionStorage.removeItem("gleamnest_admin_instavideos");
+          sessionStorage.removeItem("noomis_admin_instavideos");
         }
       } catch (e) {}
     }
@@ -193,7 +195,7 @@ export default function AdminDashboardPage() {
 
   const [instaVideoForm, setInstaVideoForm] = useState({
     title: "Jewelry Styling Reel",
-    handle: "@gleamnest.in",
+    handle: "@noomi_s_couture",
     caption: "",
     videoUrl: "",
     poster: "",
@@ -222,12 +224,11 @@ export default function AdminDashboardPage() {
     category: string;
     price: string;
     salePrice: string;
-    priceQatar: string;
-    salePriceQatar: string;
     stockCount: string;
     shortDescription: string;
     description: string;
     imageUrl: string;
+    images: string[];
     featured: boolean;
     isBestSeller: boolean;
     isNewArrival: boolean;
@@ -239,12 +240,11 @@ export default function AdminDashboardPage() {
     category: "necklaces-and-chains",
     price: "",
     salePrice: "",
-    priceQatar: "",
-    salePriceQatar: "",
     stockCount: "10",
     shortDescription: "",
     description: "",
     imageUrl: "",
+    images: [],
     featured: false,
     isBestSeller: false,
     isNewArrival: true,
@@ -252,6 +252,7 @@ export default function AdminDashboardPage() {
     selectedSizes: [...RING_SPECIFIC_SIZES],
     sizeStock: {},
   });
+  const [newImageUrlInput, setNewImageUrlInput] = useState("");
 
   const fetchReviewsAndVideos = () => {
     fetch("/api/reviews")
@@ -259,17 +260,17 @@ export default function AdminDashboardPage() {
       .then((data) => {
         if (Array.isArray(data.reviews)) {
           setReviewsList(data.reviews);
-          try { sessionStorage.setItem("gleamnest_admin_reviews", JSON.stringify(data.reviews)); } catch (e) {}
+          try { sessionStorage.setItem("noomis_admin_reviews", JSON.stringify(data.reviews)); } catch (e) {}
         }
         if (Array.isArray(data.videoReels)) {
           const cleanVideos = data.videoReels.map((v: any) => ({
             ...v,
             poster: (v.poster?.startsWith("data:image/webp") || v.poster?.includes("photo-1611591475806-039775089201") || !v.poster)
-              ? "/images/gleamnest-brand-card.png"
+              ? "/images/noomis-brand-card.png"
               : v.poster,
           }));
           setVideosList(cleanVideos);
-          try { sessionStorage.setItem("gleamnest_admin_videos", JSON.stringify(cleanVideos)); } catch (e) {}
+          try { sessionStorage.setItem("noomis_admin_videos", JSON.stringify(cleanVideos)); } catch (e) {}
         }
         if (Array.isArray(data.feedbackScreenshots)) {
           const cleanScreenshots = data.feedbackScreenshots.map((s: any) => {
@@ -277,29 +278,31 @@ export default function AdminDashboardPage() {
             if (img.startsWith("data:image/webp") || img.includes("photo-1611591475806-039775089201") || !img) {
               img = (s.customerName === "Sn" || s.piece === "Earing" || s.id === "fb-1793177769534")
                 ? "/uploads/screenshots/customer-review-whatsapp-1.jpg"
-                : "/images/gleamnest-brand-card.png";
+                : "/images/noomis-brand-card.png";
             }
             return { ...s, imageUrl: img };
           });
           setFeedbackScreenshotsList(cleanScreenshots);
-          try { sessionStorage.setItem("gleamnest_admin_screenshots", JSON.stringify(cleanScreenshots)); } catch (e) {}
+          try { sessionStorage.setItem("noomis_admin_screenshots", JSON.stringify(cleanScreenshots)); } catch (e) {}
         }
         if (Array.isArray(data.instagramVideos)) {
           const cleanInsta = data.instagramVideos
             .filter((v: any) => !String(v.id || "").startsWith("fth-panel-") && v.id !== "insta-1" && v.id !== "insta-2")
             .map((v: any) => ({
               ...v,
-              handle: (v.handle && !v.handle.toLowerCase().includes("alnaya")) ? v.handle : "@gleamnest.in",
-              caption: (v.caption || "").replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "GleamNest"),
-              instagramLink: (v.instagramLink || "").replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "gleamnest.in"),
+              handle: (v.handle && !v.handle.toLowerCase().includes("alnaya") && !v.handle.toLowerCase().includes("gleam") && v.handle !== "@noomiscouture" && v.handle !== "@noomis.in") ? v.handle : "@noomi_s_couture",
+              caption: (v.caption || "").replace(/alnaya\.in/gi, "noomi_s_couture").replace(/gleamnest/gi, "noomi_s_couture").replace(/@noomiscouture/gi, "@noomi_s_couture").replace(/@noomis\.in/gi, "@noomi_s_couture").replace(/alnaya/gi, "Noomi's Couture"),
+              instagramLink: (v.instagramLink || "").includes("noomis.in") || (v.instagramLink || "").includes("noomiscouture") || (v.instagramLink || "").toLowerCase().includes("alnaya") || (v.instagramLink || "").toLowerCase().includes("gleam")
+                ? "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"
+                : v.instagramLink,
               poster: (v.poster?.startsWith("data:image/webp")
                 ? "/uploads/images/charm-bangles-poster.jpg"
                 : v.poster?.includes("photo-1611591475806-039775089201")
-                ? "/images/gleamnest-brand-card.png"
-                : v.poster) || "/images/gleamnest-brand-card.png",
+                ? "/images/noomis-brand-card.png"
+                : v.poster) || "/images/noomis-brand-card.png",
             }));
           setInstagramVideosList(cleanInsta);
-          try { sessionStorage.setItem("gleamnest_admin_instavideos", JSON.stringify(cleanInsta)); } catch (e) {}
+          try { sessionStorage.setItem("noomis_admin_instavideos", JSON.stringify(cleanInsta)); } catch (e) {}
         }
       })
       .catch((err) => console.error("Error fetching reviews:", err));
@@ -311,7 +314,7 @@ export default function AdminDashboardPage() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setCategoriesList(data);
-          try { sessionStorage.setItem("gleamnest_categories", JSON.stringify(data)); } catch (e) {}
+          try { sessionStorage.setItem("noomis_categories", JSON.stringify(data)); } catch (e) {}
         }
       })
       .catch((err) => console.error("Error fetching categories:", err));
@@ -320,7 +323,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     // Check if merchant is already authenticated
     if (typeof window !== "undefined") {
-      const auth = localStorage.getItem("gleamnest_admin_auth");
+      const auth = localStorage.getItem("noomis_admin_auth");
       if (auth === "true") {
         setIsAuthenticated(true);
       } else {
@@ -335,13 +338,13 @@ export default function AdminDashboardPage() {
     const cleanPassword = loginPassword.trim();
 
     // Accepted Merchant Credentials:
-    // Username: admin@gleamnest.in or admin
-    // Password: gleamnest@2026 or GleamNest@2026
+    // Username: admin@noomiscouture or admin
+    // Password: noomi@2026 or Noomi@2026
     if (
-      (cleanEmail === "admin@gleamnest.in" || cleanEmail === "admin") &&
-      (cleanPassword === "gleamnest@2026" || cleanPassword === "GleamNest@2026")
+      (cleanEmail === "admin@noomiscouture" || cleanEmail === "admin") &&
+      (cleanPassword === "noomi@2026" || cleanPassword === "Noomi@2026")
     ) {
-      localStorage.setItem("gleamnest_admin_auth", "true");
+      localStorage.setItem("noomis_admin_auth", "true");
       setIsAuthenticated(true);
       setLoginError("");
     } else {
@@ -350,7 +353,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("gleamnest_admin_auth");
+    localStorage.removeItem("noomis_admin_auth");
     setIsAuthenticated(false);
     setLoginPassword("");
   };
@@ -366,7 +369,7 @@ export default function AdminDashboardPage() {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             setOrders(data);
-            try { sessionStorage.setItem("gleamnest_admin_orders", JSON.stringify(data)); } catch (e) {}
+            try { sessionStorage.setItem("noomis_admin_orders", JSON.stringify(data)); } catch (e) {}
           }
         })
         .catch((err) => console.error("Error fetching orders:", err));
@@ -412,6 +415,11 @@ export default function AdminDashboardPage() {
     if (!file.type.startsWith("image/")) return file;
     // Don't re-encode vector or animated images
     if (file.type === "image/svg+xml" || file.type === "image/gif") return file;
+
+    // NEVER compress hero images - preserve 100% original high-fidelity resolution
+    if (file.name.toLowerCase().includes("hero") || (file as any).isHero || (folder as any) === "hero") {
+      return file;
+    }
 
     // For screenshots (WhatsApp / Instagram reviews / chats), preserve up to 2MB untouched
     if (folder === "screenshots") {
@@ -1231,11 +1239,11 @@ export default function AdminDashboardPage() {
     setEditingInstaVideo(null);
     setInstaVideoForm({
       title: "",
-      handle: "@gleamnest.in",
+      handle: "@noomi_s_couture",
       caption: "",
       videoUrl: "",
       poster: "",
-      instagramLink: "https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5",
+      instagramLink: "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr",
     });
     setIsInstaVideoModalOpen(true);
   };
@@ -1244,7 +1252,7 @@ export default function AdminDashboardPage() {
     setEditingInstaVideo(video);
     setInstaVideoForm({
       title: video.title || "",
-      handle: video.handle || "@gleamnest.in",
+      handle: video.handle || "@noomi_s_couture",
       caption: video.caption || "",
       videoUrl: video.videoUrl || "",
       poster: video.poster || "",
@@ -1341,7 +1349,7 @@ export default function AdminDashboardPage() {
       setEditingInstaVideo(null);
       setInstaVideoForm({
         title: "Jewelry Styling Reel",
-        handle: "@gleamnest.in",
+        handle: "@noomi_s_couture",
         caption: "",
         videoUrl: "",
         poster: "",
@@ -1461,10 +1469,13 @@ export default function AdminDashboardPage() {
         const data = await res.json();
         if (Array.isArray(data.categories)) {
           setCategoriesList(data.categories);
+          try { sessionStorage.setItem("noomis_categories", JSON.stringify(data.categories)); } catch (e) {}
         } else {
-          setCategoriesList((prev) =>
-            prev.map((c) => (c.id === categoryForm.id ? { ...c, ...categoryForm } : c))
-          );
+          setCategoriesList((prev) => {
+            const updated = prev.map((c) => (c.id === categoryForm.id ? { ...c, ...categoryForm } : c));
+            try { sessionStorage.setItem("noomis_categories", JSON.stringify(updated)); } catch (e) {}
+            return updated;
+          });
         }
       } else {
         const res = await fetch("/api/categories", {
@@ -1475,8 +1486,13 @@ export default function AdminDashboardPage() {
         const data = await res.json();
         if (Array.isArray(data.categories)) {
           setCategoriesList(data.categories);
+          try { sessionStorage.setItem("noomis_categories", JSON.stringify(data.categories)); } catch (e) {}
         } else {
-          setCategoriesList((prev) => [...prev, { ...categoryForm, productCount: 0 }]);
+          setCategoriesList((prev) => {
+            const updated = [...prev, { ...categoryForm, productCount: 0 }];
+            try { sessionStorage.setItem("noomis_categories", JSON.stringify(updated)); } catch (e) {}
+            return updated;
+          });
         }
       }
       setIsCategoryModalOpen(false);
@@ -1497,8 +1513,13 @@ export default function AdminDashboardPage() {
       const data = await res.json();
       if (Array.isArray(data.categories)) {
         setCategoriesList(data.categories);
+        try { sessionStorage.setItem("noomis_categories", JSON.stringify(data.categories)); } catch (e) {}
       } else {
-        setCategoriesList((prev) => prev.filter((c) => c.id !== catId));
+        setCategoriesList((prev) => {
+          const updated = prev.filter((c) => c.id !== catId);
+          try { sessionStorage.setItem("noomis_categories", JSON.stringify(updated)); } catch (e) {}
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Error deleting category:", err);
@@ -1527,12 +1548,11 @@ export default function AdminDashboardPage() {
       category: "necklaces-and-chains",
       price: "",
       salePrice: "",
-      priceQatar: "",
-      salePriceQatar: "",
       stockCount: "10",
       shortDescription: "",
       description: "",
-      imageUrl: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800",
+      imageUrl: "",
+      images: [],
       featured: false,
       isBestSeller: false,
       isNewArrival: true,
@@ -1540,14 +1560,12 @@ export default function AdminDashboardPage() {
       selectedSizes: initialRingSizes,
       sizeStock: initialSizeStock,
     });
+    setNewImageUrlInput("");
     setIsModalOpen(true);
   };
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
-    const suggestedQar = product.priceQatar !== undefined && product.priceQatar !== null
-      ? product.priceQatar.toString()
-      : Math.max(10, Math.round(product.price / 20)).toString();
 
     // Detect existing sizing configuration (adjustable vs specific sizes)
     const explicitSizeAttr = product.variantAttributes?.find((a) => /size/i.test(a.name));
@@ -1611,17 +1629,21 @@ export default function AdminDashboardPage() {
       }
     });
 
+    // Populate multiple images list from product
+    const existingImages: string[] = Array.isArray(product.images) && product.images.length > 0
+      ? product.images.filter((img) => Boolean(img && typeof img === "string" && img.trim()))
+      : (product as any).imageUrl ? [(product as any).imageUrl] : [];
+
     setFormState({
       title: product.title,
       category: normalizedCategory,
       price: product.price.toString(),
       salePrice: product.salePrice ? product.salePrice.toString() : "",
-      priceQatar: suggestedQar,
-      salePriceQatar: product.salePriceQatar ? product.salePriceQatar.toString() : "",
       stockCount: product.stockCount.toString(),
       shortDescription: product.shortDescription,
       description: product.description,
-      imageUrl: product.images[0] || "",
+      imageUrl: existingImages[0] || (product as any).imageUrl || "",
+      images: existingImages,
       featured: !!product.featured,
       isBestSeller: !!product.isBestSeller,
       isNewArrival: !!product.isNewArrival,
@@ -1629,6 +1651,7 @@ export default function AdminDashboardPage() {
       selectedSizes,
       sizeStock,
     });
+    setNewImageUrlInput("");
     setIsModalOpen(true);
   };
 
@@ -1638,23 +1661,98 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Multi-Photo Upload Handler with auto-compression
+  const handleMultipleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if (file.size > 25 * 1024 * 1024) {
-      alert("Image is larger than 25MB. Please choose a smaller image.");
-      return;
-    }
-
+    setIsUploading(true);
     try {
-      const publicUrl = await uploadFileToServer(file, "images");
-      setFormState((prev) => ({ ...prev, imageUrl: publicUrl }));
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 25 * 1024 * 1024) {
+          alert(`Image "${file.name}" exceeds 25MB. Skipping.`);
+          continue;
+        }
+        setUploadProgressText(`Optimizing & uploading photo ${i + 1} of ${files.length}...`);
+        const publicUrl = await uploadFileToServer(file, "images");
+        if (publicUrl) {
+          uploadedUrls.push(publicUrl);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setFormState((prev) => {
+          const updatedImages = [...prev.images, ...uploadedUrls];
+          return {
+            ...prev,
+            images: updatedImages,
+            imageUrl: prev.imageUrl || updatedImages[0] || "",
+          };
+        });
+      }
     } catch (err: any) {
-      alert("Error uploading image: " + (err.message || "Upload failed"));
+      alert("Error uploading image(s): " + (err.message || "Upload failed"));
     } finally {
+      setIsUploading(false);
+      setUploadProgressText("");
       e.target.value = "";
     }
+  };
+
+  // Reorder / Cover image management handlers
+  const handleSetCoverImage = (index: number) => {
+    setFormState((prev) => {
+      if (index <= 0 || index >= prev.images.length) return prev;
+      const list = [...prev.images];
+      const [cover] = list.splice(index, 1);
+      list.unshift(cover);
+      return {
+        ...prev,
+        images: list,
+        imageUrl: list[0] || "",
+      };
+    });
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormState((prev) => {
+      const list = prev.images.filter((_, idx) => idx !== index);
+      return {
+        ...prev,
+        images: list,
+        imageUrl: list[0] || "",
+      };
+    });
+  };
+
+  const handleMoveImage = (fromIndex: number, toIndex: number) => {
+    setFormState((prev) => {
+      if (toIndex < 0 || toIndex >= prev.images.length) return prev;
+      const list = [...prev.images];
+      const [item] = list.splice(fromIndex, 1);
+      list.splice(toIndex, 0, item);
+      return {
+        ...prev,
+        images: list,
+        imageUrl: list[0] || "",
+      };
+    });
+  };
+
+  const handleAddImageUrlInput = () => {
+    const cleanUrl = newImageUrlInput.trim();
+    if (!cleanUrl) return;
+    setFormState((prev) => {
+      const updated = [...prev.images, cleanUrl];
+      return {
+        ...prev,
+        images: updated,
+        imageUrl: prev.imageUrl || updated[0] || cleanUrl,
+      };
+    });
+    setNewImageUrlInput("");
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -1669,10 +1767,6 @@ export default function AdminDashboardPage() {
     try {
       const parsedPriceInr = parseFloat(formState.price);
       const parsedSalePriceInr = formState.salePrice ? parseFloat(formState.salePrice) : null;
-      const parsedPriceQar = formState.priceQatar
-        ? parseFloat(formState.priceQatar)
-        : Math.max(10, Math.round(parsedPriceInr / 20));
-      const parsedSalePriceQar = formState.salePriceQatar ? parseFloat(formState.salePriceQatar) : null;
 
       // Construct sizing variants for rings or bangles
       let variantAttributes = editingProduct?.variantAttributes
@@ -1739,6 +1833,13 @@ export default function AdminDashboardPage() {
         }
       }
 
+      const finalImages = formState.images.length > 0
+        ? formState.images
+        : formState.imageUrl
+        ? [formState.imageUrl]
+        : ["https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800"];
+      const primaryImage = finalImages[0];
+
       if (editingProduct) {
         // Update existing product in DB and Store
         await updateProduct(editingProduct.id, {
@@ -1746,14 +1847,12 @@ export default function AdminDashboardPage() {
           category: savedCategory,
           price: parsedPriceInr,
           salePrice: parsedSalePriceInr,
-          priceQatar: parsedPriceQar,
-          salePriceQatar: parsedSalePriceQar,
           stockCount: finalStockCount,
           inStock: finalStockCount > 0,
           shortDescription: formState.shortDescription || formState.title,
           description: formState.description || formState.title,
-          imageUrl: formState.imageUrl,
-          images: [formState.imageUrl],
+          imageUrl: primaryImage,
+          images: finalImages,
           featured: formState.featured,
           isBestSeller: formState.isBestSeller,
           isNewArrival: formState.isNewArrival,
@@ -1766,14 +1865,12 @@ export default function AdminDashboardPage() {
           category: formState.category,
           price: parsedPriceInr,
           salePrice: parsedSalePriceInr,
-          priceQatar: parsedPriceQar,
-          salePriceQatar: parsedSalePriceQar,
           stockCount: finalStockCount,
           inStock: finalStockCount > 0,
           shortDescription: formState.shortDescription || formState.title,
           description: formState.description || formState.title,
-          imageUrl: formState.imageUrl,
-          images: [formState.imageUrl],
+          imageUrl: primaryImage,
+          images: finalImages,
           tags: [formState.category, "New"],
           featured: formState.featured,
           isBestSeller: formState.isBestSeller,
@@ -1836,14 +1933,14 @@ export default function AdminDashboardPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground flex items-center justify-between">
                 <span>Admin Username or Email</span>
-                <span className="text-[10px] text-muted-foreground font-mono">admin@gleamnest.in</span>
+                <span className="text-[10px] text-muted-foreground font-mono">admin@noomiscouture</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   required
                   autoFocus
-                  placeholder="admin@gleamnest.in"
+                  placeholder="admin@noomiscouture"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl bg-background border border-border focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -1855,7 +1952,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground flex items-center justify-between">
                 <span>Secret Password</span>
-                <span className="text-[10px] text-muted-foreground font-mono">gleamnest@2026</span>
+                <span className="text-[10px] text-muted-foreground font-mono">noomi@2026</span>
               </label>
               <div className="relative">
                 <input
@@ -2102,11 +2199,11 @@ export default function AdminDashboardPage() {
                       <td className="py-3">
                         <div className="flex items-center gap-3">
                           <img
-                            src={product.images[0] || "/images/gleamnest-brand-card.png"}
+                            src={product.images[0] || "/images/noomis-brand-card.png"}
                             alt=""
                             loading="lazy"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                              (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                             }}
                             className="w-10 h-12 object-cover rounded-md border border-border bg-stone-100"
                           />
@@ -2120,18 +2217,10 @@ export default function AdminDashboardPage() {
                       <td className="py-3 font-semibold text-foreground">
                         <div className="flex flex-col text-xs leading-tight">
                           <span className="text-foreground">
-                            🇮🇳 {formatPrice(product.salePrice || product.price, "INR")}
+                            {formatPrice(product.salePrice || product.price, "INR")}
                             {product.salePrice && (
-                              <span className="text-[10px] text-muted-foreground line-through ml-1">
+                              <span className="text-[10px] text-muted-foreground line-through ml-1.5 font-normal">
                                 {formatPrice(product.price, "INR")}
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-emerald-700 font-medium text-[11px] mt-0.5">
-                            🇶🇦 {formatPrice(product.salePriceQatar || product.priceQatar || Math.max(10, Math.round((product.salePrice || product.price) / 20)), "QAR")}
-                            {product.salePriceQatar && (
-                              <span className="text-[10px] text-muted-foreground line-through ml-1">
-                                {formatPrice(product.priceQatar || Math.max(10, Math.round(product.price / 20)), "QAR")}
                               </span>
                             )}
                           </span>
@@ -2339,19 +2428,31 @@ export default function AdminDashboardPage() {
                           )}
                         </div>
 
-                        <select
-                          value={order.status || "processing"}
-                          onChange={(e) =>
-                            handleUpdateOrderStatus(order.id, e.target.value as OrderStatus)
-                          }
-                          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-card border border-border focus:ring-1 focus:ring-primary cursor-pointer"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrderForWhatsApp(order)}
+                            className="px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95"
+                            title="Send Beautified WhatsApp Confirmation"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 fill-current" />
+                            <span>WhatsApp</span>
+                          </button>
+
+                          <select
+                            value={order.status || "processing"}
+                            onChange={(e) =>
+                              handleUpdateOrderStatus(order.id, e.target.value as OrderStatus)
+                            }
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-card border border-border focus:ring-1 focus:ring-primary cursor-pointer"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   );
@@ -2396,7 +2497,7 @@ export default function AdminDashboardPage() {
               <div className="p-5 rounded-xl bg-muted/30 border border-border space-y-3">
                 <div className="flex items-center gap-2 text-foreground font-bold text-xs uppercase tracking-wider">
                   <Truck className="w-4 h-4 text-emerald-600" />
-                  <span>Dual Regional Pricing & Delivery</span>
+                  <span>Pan-India Shipping & Payments</span>
                 </div>
                 <div className="text-xs space-y-1.5 text-muted-foreground">
                   <p>
@@ -2405,14 +2506,8 @@ export default function AdminDashboardPage() {
                       Free Shipping on orders above ₹{storeConfig.commerce.freeShippingThreshold} (Flat ₹{storeConfig.commerce.flatShippingFee} below)
                     </strong>
                   </p>
-                  <p>
-                    🇶🇦 Qatar (QAR):{" "}
-                    <strong className="text-emerald-700 font-bold">
-                      100% Complimentary Express Delivery on all orders
-                    </strong>
-                  </p>
-                  <p>Ordering Method: <strong className="text-foreground">Instant WhatsApp Order Direct Checkout</strong></p>
-                  <p>Payment Modes: <strong className="text-foreground">Direct UPI (GPay/PhonePe/Paytm), COD & Direct Bank Transfer</strong></p>
+                  <p>Ordering Method: <strong className="text-foreground">Razorpay Instant Gateway Checkout (Cards, UPI, Netbanking)</strong></p>
+                  <p>Discount Policy: <strong className="text-emerald-700 font-semibold">5% Automatic Welcome Discount on 1st Purchase (Code: NOOMI5) • Standard rate from 2nd purchase</strong></p>
                 </div>
               </div>
 
@@ -2431,7 +2526,7 @@ export default function AdminDashboardPage() {
                       rel="noreferrer"
                       className="text-primary hover:underline font-mono text-[11px]"
                     >
-                      @gleamnest.in ↗
+                      @noomi_s_couture ↗
                     </a>
                   </p>
                   <p>
@@ -2442,7 +2537,7 @@ export default function AdminDashboardPage() {
                       rel="noreferrer"
                       className="text-primary hover:underline font-mono text-[11px]"
                     >
-                      GleamNest Official Page ↗
+                      Noomi's Couture Official Page ↗
                     </a>
                   </p>
                   <p>
@@ -2467,8 +2562,8 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="text-xs space-y-1.5 text-muted-foreground">
                   <p>Portal URL: <strong className="text-foreground font-mono">/admin</strong></p>
-                  <p>Username / Email: <strong className="text-foreground font-mono">admin@gleamnest.in</strong> (or <span className="font-mono">admin</span>)</p>
-                  <p>Default Password: <strong className="text-foreground font-mono">gleamnest@2026</strong></p>
+                  <p>Username / Email: <strong className="text-foreground font-mono">admin@noomiscouture</strong> (or <span className="font-mono">admin</span>)</p>
+                  <p>Default Password: <strong className="text-foreground font-mono">noomi@2026</strong></p>
                   <p>Session Security: <strong className="text-emerald-700">Encrypted Local Storage Authentication</strong></p>
                 </div>
               </div>
@@ -2616,7 +2711,7 @@ export default function AdminDashboardPage() {
                           alt={item.customerName || item.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                            (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                           }}
                         />
                         <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -2715,12 +2810,12 @@ export default function AdminDashboardPage() {
                           src={
                             video.poster && !video.poster.startsWith("data:image/webp")
                               ? video.poster
-                              : "/images/gleamnest-brand-card.png"
+                              : "/images/noomis-brand-card.png"
                           }
                           alt={video.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                            (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 flex flex-col justify-between p-3 text-white">
@@ -2736,7 +2831,7 @@ export default function AdminDashboardPage() {
 
                           <div>
                             <p className="text-xs font-bold line-clamp-1 text-white">{video.title}</p>
-                            <p className="text-[10px] text-white/80">{video.handle && !video.handle.toLowerCase().includes("alnaya") ? video.handle : "@gleamnest.in"}</p>
+                            <p className="text-[10px] text-white/80">{video.handle && !video.handle.toLowerCase().includes("alnaya") && !video.handle.toLowerCase().includes("gleam") && video.handle !== "@noomiscouture" && video.handle !== "@noomis.in" ? video.handle : "@noomi_s_couture"}</p>
                           </div>
                         </div>
                       </div>
@@ -2744,13 +2839,15 @@ export default function AdminDashboardPage() {
                       <div className="p-3 bg-card border-t border-border flex flex-col justify-between flex-1 gap-2">
                         {video.caption && (
                           <p className="text-[11px] text-muted-foreground line-clamp-2">
-                            {video.caption?.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "GleamNest")}
+                            {video.caption?.replace(/alnaya\.in/gi, "noomi_s_couture").replace(/gleamnest/gi, "noomi_s_couture").replace(/@noomiscouture/gi, "@noomi_s_couture").replace(/@noomis\.in/gi, "@noomi_s_couture").replace(/alnaya/gi, "Noomi's Couture")}
                           </p>
                         )}
 
                         <div className="pt-2 border-t border-border/60 flex items-center justify-between">
                           <a
-                            href={(video.instagramLink || video.videoUrl)?.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "gleamnest.in")}
+                            href={(video.instagramLink || video.videoUrl)?.includes("noomis.in") || (video.instagramLink || video.videoUrl)?.includes("noomiscouture") || (video.instagramLink || video.videoUrl)?.toLowerCase().includes("alnaya") || (video.instagramLink || video.videoUrl)?.toLowerCase().includes("gleam")
+                              ? "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"
+                              : (video.instagramLink || video.videoUrl)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
@@ -2869,12 +2966,12 @@ export default function AdminDashboardPage() {
                         src={
                           video.poster && !video.poster.startsWith("data:image/webp")
                             ? video.poster
-                            : "/images/gleamnest-brand-card.png"
+                            : "/images/noomis-brand-card.png"
                         }
                         alt={video.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                          (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 flex flex-col justify-between p-3 text-white">
@@ -3086,13 +3183,13 @@ export default function AdminDashboardPage() {
 
               <div className="flex items-center gap-2.5 flex-wrap">
                 <a
-                  href="https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5"
+                  href="https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-2 rounded-xl border border-border hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
                 >
                   <Instagram className="w-3.5 h-3.5 text-[#E1306C]" />
-                  <span>@gleamnest.in ↗</span>
+                  <span>@noomi_s_couture ↗</span>
                 </a>
                 <button
                   type="button"
@@ -3148,7 +3245,7 @@ export default function AdminDashboardPage() {
                             poster={
                               video.poster && !video.poster.startsWith("data:image/webp")
                                 ? video.poster
-                                : "/images/gleamnest-brand-card.png"
+                                : "/images/noomis-brand-card.png"
                             }
                             autoPlay
                             loop
@@ -3162,12 +3259,12 @@ export default function AdminDashboardPage() {
                             src={
                               video.poster && !video.poster.startsWith("data:image/webp")
                                 ? video.poster
-                                : "/images/gleamnest-brand-card.png"
+                                : "/images/noomis-brand-card.png"
                             }
                             alt={video.title}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                              (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                             }}
                           />
                         )}
@@ -3248,7 +3345,7 @@ export default function AdminDashboardPage() {
                         {/* Bottom Text Details */}
                         <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none space-y-0.5">
                           <p className="text-[10px] text-[#F3DFB0] font-mono tracking-wider">
-                            {video.handle || "@gleamnest.in"}
+                            {video.handle || "@noomi_s_couture"}
                           </p>
                           <h4 className="text-xs sm:text-sm font-bold leading-tight text-white drop-shadow line-clamp-1">
                             {video.title}
@@ -3268,7 +3365,7 @@ export default function AdminDashboardPage() {
                             {video.title}
                           </span>
                           <span className="text-[10px] text-muted-foreground font-mono block truncate">
-                            {video.handle || "@gleamnest.in"}
+                            {video.handle || "@noomi_s_couture"}
                           </span>
                         </div>
 
@@ -3359,8 +3456,8 @@ export default function AdminDashboardPage() {
                     value={formState.category}
                     onChange={(e) => {
                       const newCat = e.target.value;
-                      const isRing = newCat === "rings";
-                      const isBangle = newCat === "bangles-kada";
+                      const isRing = isRingCategory(newCat);
+                      const isBangle = isBangleCategory(newCat);
                       let newSizes = formState.selectedSizes;
                       const newSizeStock = { ...formState.sizeStock };
 
@@ -3385,17 +3482,11 @@ export default function AdminDashboardPage() {
                     }}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
                   >
-                    <option value="necklaces-and-chains">Necklaces and Chains</option>
-                    <option value="rings">Rings</option>
-                    <option value="earrings">Earrings</option>
-                    <option value="bracelets">Bracelets</option>
-                    <option value="bangles-kada">Bangles Kada</option>
-                    <option value="watches">Watches</option>
-                    <option value="charms">Charms</option>
-                    <option value="hip-chains">Hip Chains</option>
-                    <option value="anklets">Anklets</option>
-                    <option value="kids-collection">Kids Collection</option>
-                    <option value="new-arrivals">New Arrivals</option>
+                    {categoriesList.map((c) => (
+                      <option key={c.id || c.slug} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -3696,161 +3787,202 @@ export default function AdminDashboardPage() {
                 </div>
               )}
 
-              {/* Dual Country Pricing (India & Qatar) */}
-              <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-4">
+              {/* Product Pricing (India ₹ INR Only) */}
+              <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
                 <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">Product Pricing by Region</h4>
-                    <p className="text-[10px] text-muted-foreground">Set separate retail and sale prices for India and Qatar</p>
-                  </div>
-                </div>
-
-                {/* India (₹ INR) */}
-                <div className="space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                     <span>🇮🇳</span>
-                    <span>India (₹ INR)</span>
+                    <span>Pricing (India ₹ INR)</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-muted-foreground">Price (₹) *</label>
-                      <input
-                        type="number"
-                        step="1"
-                        required
-                        placeholder="899"
-                        value={formState.price}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormState((prev) => ({
-                            ...prev,
-                            price: val,
-                            // Auto-suggest Qatar price if empty
-                            priceQatar: prev.priceQatar ? prev.priceQatar : val ? Math.max(10, Math.round(parseFloat(val) / 20)).toString() : "",
-                          }));
-                        }}
-                        className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-muted-foreground">Sale Price (₹ Optional)</label>
-                      <input
-                        type="number"
-                        step="1"
-                        placeholder="699"
-                        value={formState.salePrice}
-                        onChange={(e) => setFormState({ ...formState, salePrice: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
-                      />
-                    </div>
-                  </div>
+                  <span className="text-[10px] text-muted-foreground font-medium">Pan-India Domestic Catalog</span>
                 </div>
 
-                {/* Qatar (QAR) */}
-                <div className="space-y-2 pt-3 border-t border-border/40">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                      <span>🇶🇦</span>
-                      <span>Qatar (QAR)</span>
-                    </div>
-                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      Free Delivery in Qatar Included
-                    </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-muted-foreground">Retail Price (₹) *</label>
+                    <input
+                      type="number"
+                      step="1"
+                      required
+                      placeholder="899"
+                      value={formState.price}
+                      onChange={(e) => setFormState({ ...formState, price: e.target.value })}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
+                    />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-muted-foreground">Price (QAR) *</label>
-                      <input
-                        type="number"
-                        step="1"
-                        required
-                        placeholder="45"
-                        value={formState.priceQatar}
-                        onChange={(e) => setFormState({ ...formState, priceQatar: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none font-semibold text-emerald-800"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-muted-foreground">Sale Price (QAR Optional)</label>
-                      <input
-                        type="number"
-                        step="1"
-                        placeholder="35"
-                        value={formState.salePriceQatar}
-                        onChange={(e) => setFormState({ ...formState, salePriceQatar: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-muted-foreground">Sale / Discounted Price (₹ Optional)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      placeholder="699"
+                      value={formState.salePrice}
+                      onChange={(e) => setFormState({ ...formState, salePrice: e.target.value })}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Product Image (Upload from Device or Web URL) */}
-              <div className="space-y-2 border border-border p-3.5 rounded-xl bg-muted/20">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-primary" />
-                    <span>Product Image *</span>
-                  </label>
-                  <span className="text-[11px] text-muted-foreground">Auto-compressed to fast web format</span>
+              {/* Multi-Photo Gallery & Management (Auto-compressed for low bandwidth) */}
+              <div className="space-y-3 border border-border p-4 rounded-xl bg-muted/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-border/60 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold text-foreground">
+                      Product Photos Gallery ({formState.images.length} {formState.images.length === 1 ? "photo" : "photos"})
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    ⚡ Auto-Compressed (Low Data)
+                  </span>
                 </div>
 
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Upload multiple product photos. The <strong>first photo is the Cover Photo</strong> seen on the store catalog. All uploads are automatically compressed to fast web format to conserve customer bandwidth.
+                </p>
+
                 {isUploading && (
-                  <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium flex items-center gap-2 animate-pulse">
-                    <Clock className="w-3.5 h-3.5 animate-spin shrink-0" />
-                    <span>{uploadProgressText || "Optimizing and uploading photo..."}</span>
+                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium flex items-center gap-2 animate-pulse">
+                    <Clock className="w-4 h-4 animate-spin shrink-0" />
+                    <span>{uploadProgressText || "Compressing and uploading photos..."}</span>
                   </div>
                 )}
 
-                {/* File picker */}
-                <div>
+                {/* Upload Buttons: Multiple device selection or URL */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <label
-                    htmlFor="admin-file-upload"
-                    className={`w-full px-3 py-2.5 rounded-lg border border-dashed border-border hover:border-primary bg-background hover:bg-muted/40 cursor-pointer flex items-center justify-center gap-2 text-xs font-medium text-foreground transition-colors ${
+                    htmlFor="admin-multi-file-upload"
+                    className={`px-3 py-2.5 rounded-lg border border-dashed border-primary/50 hover:border-primary bg-background hover:bg-primary/5 cursor-pointer flex items-center justify-center gap-2 text-xs font-semibold text-primary transition-all shadow-xs ${
                       isUploading ? "opacity-50 pointer-events-none" : ""
                     }`}
                   >
-                    <Upload className="w-4 h-4 text-primary" />
-                    <span>Choose Photo from Device / Phone</span>
+                    <Upload className="w-4 h-4" />
+                    <span>+ Upload Multiple Photos</span>
                   </label>
                   <input
-                    id="admin-file-upload"
+                    id="admin-multi-file-upload"
                     type="file"
+                    multiple
                     accept="image/*"
-                    onChange={handleImageFileUpload}
+                    onChange={handleMultipleImageUpload}
                     className="hidden"
                   />
+
+                  {/* Add URL form */}
+                  <div className="flex gap-1.5">
+                    <input
+                      type="url"
+                      placeholder="Paste Image URL..."
+                      value={newImageUrlInput}
+                      onChange={(e) => setNewImageUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddImageUrlInput();
+                        }
+                      }}
+                      className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrlInput}
+                      disabled={!newImageUrlInput.trim()}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/85 transition-colors disabled:opacity-40 shrink-0"
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground">Or paste public Image URL:</label>
-                  <input
-                    type="url"
-                    placeholder="https://... or bucket link"
-                    value={formState.imageUrl.startsWith("data:") ? "" : formState.imageUrl}
-                    onChange={(e) => setFormState({ ...formState, imageUrl: e.target.value })}
-                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none font-mono"
-                  />
-                </div>
+                {/* Photo Grid & Reorder Controls */}
+                {formState.images.length > 0 ? (
+                  <div className="space-y-2 pt-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {formState.images.map((imgUrl, idx) => (
+                        <div
+                          key={`img-${idx}`}
+                          className={`relative rounded-xl border overflow-hidden bg-card shadow-xs group flex flex-col ${
+                            idx === 0 ? "border-amber-500/80 ring-2 ring-amber-500/30" : "border-border"
+                          }`}
+                        >
+                          {/* Image preview */}
+                          <div className="relative aspect-square w-full bg-stone-100 dark:bg-stone-900/40 p-1 flex items-center justify-center overflow-hidden">
+                            <img
+                              src={imgUrl}
+                              alt={`Product image ${idx + 1}`}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            {/* Badges */}
+                            <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
+                              {idx === 0 ? (
+                                <span className="bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+                                  ★ Cover
+                                </span>
+                              ) : (
+                                <span className="bg-black/60 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded backdrop-blur-xs">
+                                  #{idx + 1}
+                                </span>
+                              )}
+                            </div>
 
-                {/* Preview Thumbnail */}
-                {formState.imageUrl && (
-                  <div className="flex items-center gap-3 pt-1">
-                    <div className="w-16 h-20 rounded-md overflow-hidden border border-border bg-card">
-                      <img src={formState.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                            {/* Remove button */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx)}
+                              title="Delete photo"
+                              className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/70 hover:bg-red-600 text-white transition-colors shadow-xs"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Card Footer: Set as Cover & Reorder */}
+                          <div className="p-1.5 bg-muted/40 border-t border-border flex items-center justify-between text-[10px]">
+                            {idx !== 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoverImage(idx)}
+                                className="text-primary hover:underline font-bold"
+                              >
+                                Set Cover
+                              </button>
+                            ) : (
+                              <span className="text-amber-700 font-bold">Primary</span>
+                            )}
+
+                            {/* Reordering buttons */}
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveImage(idx, idx - 1)}
+                                title="Move left"
+                                className="px-1.5 py-0.5 rounded bg-background border border-border hover:bg-muted text-foreground disabled:opacity-30 disabled:pointer-events-none font-bold text-[11px]"
+                              >
+                                ←
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === formState.images.length - 1}
+                                onClick={() => handleMoveImage(idx, idx + 1)}
+                                title="Move right"
+                                className="px-1.5 py-0.5 rounded bg-background border border-border hover:bg-muted text-foreground disabled:opacity-30 disabled:pointer-events-none font-bold text-[11px]"
+                              >
+                                →
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="text-xs space-y-1">
-                      <p className="font-medium text-foreground">
-                        {formState.imageUrl.startsWith("data:") ? "Photo Selected ✓" : "Web URL Linked ✓"}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setFormState({ ...formState, imageUrl: "" })}
-                        className="text-[11px] text-red-600 hover:underline"
-                      >
-                        Remove Photo
-                      </button>
-                    </div>
+                  </div>
+                ) : (
+                  <div className="py-6 border border-dashed border-border/80 rounded-xl bg-background/60 text-center space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium">No photos uploaded for this piece yet.</p>
+                    <p className="text-[11px] text-muted-foreground/75">
+                      Upload from phone/desktop or paste an image URL to populate the gallery.
+                    </p>
                   </div>
                 )}
               </div>
@@ -4165,7 +4297,7 @@ export default function AdminDashboardPage() {
                         alt="Poster preview"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                          (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                         }}
                       />
                     </div>
@@ -4607,7 +4739,7 @@ export default function AdminDashboardPage() {
                         alt="Poster preview"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                          (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                         }}
                       />
                     </div>
@@ -4639,7 +4771,7 @@ export default function AdminDashboardPage() {
                   <label className="text-xs font-semibold text-foreground">Instagram Handle</label>
                   <input
                     type="text"
-                    placeholder="@gleamnest.in"
+                    placeholder="@noomi_s_couture"
                     value={instaVideoForm.handle}
                     onChange={(e) => setInstaVideoForm({ ...instaVideoForm, handle: e.target.value })}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none font-mono"
@@ -4854,6 +4986,14 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* WhatsApp Order Confirmation & Dispatch Tracking Modal */}
+      <WhatsAppConfirmationModal
+        isOpen={!!selectedOrderForWhatsApp}
+        onClose={() => setSelectedOrderForWhatsApp(null)}
+        order={selectedOrderForWhatsApp}
+        onUpdateStatus={handleUpdateOrderStatus}
+      />
 
       {/* Global Real-Time Media Processing & Upload Status Floating Banner */}
       {isUploading && (

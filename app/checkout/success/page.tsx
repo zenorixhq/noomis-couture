@@ -4,189 +4,181 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { storeConfig } from "@/config/store.config";
-import { MessageCircle, ArrowRight, Copy, Check, ExternalLink, Globe } from "lucide-react";
+import {
+  CheckCircle2,
+  PackageCheck,
+  Video,
+  ShieldCheck,
+  Copy,
+  Check,
+  ArrowRight,
+  MessageCircle,
+  Truck,
+} from "lucide-react";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const orderNumber = searchParams.get("orderNumber") || "GN-8841";
+  const orderNumber = searchParams.get("orderNumber") || "NC-28491";
+  const paymentId = searchParams.get("paymentId") || "";
   const rawTotal = searchParams.get("total") || "799";
-  const phone = searchParams.get("phone") || "";
-
-  // Strip any leading currency symbol or extra spaces to ensure exactly one currency symbol
   const cleanedTotal = rawTotal.replace(/^[₹\s]+/, "");
-  const displayTotal = rawTotal.startsWith("QAR") ? rawTotal : `₹${cleanedTotal}`;
+  const displayTotal = `₹${cleanedTotal}`;
+  const phone = searchParams.get("phone") || "";
+  const method = searchParams.get("method") || (paymentId ? "razorpay" : "gateway");
 
-  const [orderMessage, setOrderMessage] = useState<string>("");
   const [copied, setCopied] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const whatsappPhone = storeConfig.brand.contact.whatsappNumber; // 916238920442
+  const isOnlinePayment = method === "razorpay" || !!paymentId;
+  const whatsappPhone = storeConfig.brand.contact.whatsappNumber || "919633956222";
 
   useEffect(() => {
-    setIsMobile(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
-    const savedMsg = sessionStorage.getItem("gleamnest_last_order_msg");
-    if (savedMsg) {
-      setOrderMessage(savedMsg);
-    } else {
-      setOrderMessage(
-        `Hi GleamNest! ✨ I just completed my order #${orderNumber} on your website for ${displayTotal}. Please share your official UPI QR code so I can complete payment and confirm shipping! 💖`
-      );
-    }
-  }, [orderNumber, displayTotal]);
-
-  const encodedMessage = encodeURIComponent(
-    orderMessage ||
-      `Hi GleamNest! ✨ I just completed my order #${orderNumber} on your website for ${displayTotal}. Please share your official UPI QR code so I can complete payment and confirm shipping! 💖`
-  );
-
-  const waWebAppUrl = `https://web.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedMessage}`;
-  const waDirectAppUrl = `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedMessage}`;
+    if (typeof window === "undefined" || !orderNumber) return;
+    try {
+      const prevOrdersStr = localStorage.getItem("noomis_placed_orders");
+      const prevOrders = prevOrdersStr ? JSON.parse(prevOrdersStr) : [];
+      const exists = prevOrders.some((o: any) => o.orderNumber === orderNumber);
+      if (!exists) {
+        const numericTotal = parseFloat(cleanedTotal) || 0;
+        const newRecord = {
+          id: `ord_${orderNumber}`,
+          orderNumber,
+          createdAt: new Date().toISOString(),
+          status: "processing",
+          paymentStatus: isOnlinePayment ? "paid" : "pending",
+          paymentMethod: method,
+          razorpayPaymentId: paymentId,
+          customer: {
+            fullName: "Valued Patron",
+            phone: phone,
+          },
+          items: [],
+          grandTotal: numericTotal,
+          trackingNumber: `DTDC-IN-${(parseInt(orderNumber.replace(/\D/g, "") || "100000", 10) * 7).toString().slice(0, 6)}`,
+        };
+        localStorage.setItem("noomis_placed_orders", JSON.stringify([newRecord, ...prevOrders]));
+      }
+      if (phone) {
+        localStorage.setItem("noomis_customer_phone", phone);
+      }
+      localStorage.setItem("noomis_has_purchased", "true");
+    } catch (e) {}
+  }, [orderNumber, paymentId, cleanedTotal, phone, method, isOnlinePayment]);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(orderMessage);
+      await navigator.clipboard.writeText(orderNumber);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
-    }
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {}
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 space-y-8">
-      {/* Animated Success Badge */}
-      <div className="text-center space-y-4">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-100 text-[#25D366] flex items-center justify-center mx-auto shadow-md">
-          <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 fill-current" />
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-8 font-sans">
+      {/* Success Badge */}
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-md">
+          <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12" />
         </div>
 
-        <span className="text-xs uppercase tracking-widest font-bold text-primary">
-          Order Sent to WhatsApp
+        <span className="text-xs uppercase tracking-widest font-bold text-[#4A171C]">
+          {isOnlinePayment ? "Payment Verified & Order Confirmed" : "Order Placed Successfully"}
         </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-foreground">
-          Thank you for choosing GleamNest!
+        <h1 className="text-3xl sm:text-4xl font-editorial font-normal text-[#240A0D]">
+          Thank you for choosing Noomi&apos;s Couture!
         </h1>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Your order details have been compiled and sent to our official WhatsApp concierge (+91 62389 20442).
+        <p className="text-sm text-stone-600 max-w-md mx-auto">
+          {isOnlinePayment
+            ? "Your payment was processed securely via Razorpay. We are preparing your anti-tarnish jewelry parcel for express dispatch."
+            : "Your order details have been confirmed. Our concierge team is packing your parcel."}
         </p>
       </div>
 
       {/* Order Summary Card */}
-      <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-border gap-4">
+      <div className="bg-[#FFFDF9] border border-[#EADBBE] rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-6 border-b border-[#EADBBE]">
           <div>
-            <span className="text-xs text-muted-foreground">Order Reference</span>
-            <p className="text-lg font-black text-foreground">{orderNumber}</p>
+            <span className="text-xs text-stone-500 block">Order Reference</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-base sm:text-lg font-bold text-[#4A171C] font-mono">
+                {orderNumber}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="p-1 rounded-md text-stone-400 hover:text-[#4A171C] transition-colors"
+                title="Copy Order ID"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
           </div>
+
           <div>
-            <span className="text-xs text-muted-foreground">Total Payable</span>
-            <p className="text-lg font-black text-foreground">{displayTotal}</p>
-          </div>
-          <div>
-            <span className="text-xs text-muted-foreground">Order Channel</span>
-            <p className="text-sm font-bold text-[#25D366] flex items-center gap-1">
-              <MessageCircle className="w-4 h-4 fill-current" />
-              <span>WhatsApp Direct</span>
+            <span className="text-xs text-stone-500 block">Amount Paid</span>
+            <p className="text-base sm:text-lg font-bold text-[#240A0D] mt-0.5">
+              {displayTotal}
             </p>
           </div>
-        </div>
 
-        {/* Steps to complete payment */}
-        <div className="space-y-3 bg-muted/30 p-5 rounded-xl border border-border text-xs text-muted-foreground">
-          <h4 className="font-bold text-foreground text-sm">Next Steps on WhatsApp:</h4>
-          <ol className="list-decimal pl-4 space-y-1.5">
-            <li>Check your WhatsApp chat with <strong>GleamNest (+91 62389 20442)</strong>.</li>
-            <li>Our concierge will verify your items and send our official <strong>GPay / PhonePe UPI QR</strong>.</li>
-            <li>Once you send your payment screenshot, your parcel will be packed and dispatched with a courier tracking ID.</li>
-          </ol>
-        </div>
-
-        {/* WhatsApp Actions (Web, App, Copy) */}
-        <div className="space-y-3 pt-2">
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            {isMobile ? (
-              <a
-                href={waDirectAppUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:flex-1 px-6 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
-              >
-                <MessageCircle className="w-4 h-4 fill-current" />
-                <span>Open WhatsApp App</span>
-              </a>
-            ) : (
-              <>
-                <a
-                  href={waWebAppUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:flex-1 px-6 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>Open in WhatsApp Web (Recommended)</span>
-                </a>
-                <a
-                  href={waDirectAppUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-xl border border-border hover:bg-muted text-foreground font-semibold text-xs flex items-center justify-center gap-2 transition-all"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Open Desktop App</span>
-                </a>
-              </>
-            )}
-
-            <button
-              onClick={handleCopy}
-              className={`w-full sm:w-auto px-5 py-3.5 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 transition-all ${
-                copied
-                  ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                  : "border-border text-foreground hover:bg-muted"
-              }`}
-            >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  <span>Order Copied! (Ctrl+V)</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-muted-foreground" />
-                  <span>Copy Order Text</span>
-                </>
-              )}
-            </button>
+          <div>
+            <span className="text-xs text-stone-500 block">Payment Method</span>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 mt-0.5">
+              <CheckCircle2 className="w-3 h-3" />
+              <span>Razorpay Verified</span>
+            </span>
           </div>
-
-          <p className="text-[11px] text-muted-foreground text-center sm:text-left">
-            💡 Using WhatsApp Desktop on Windows? If emojis ever show as symbols, click <strong>&quot;Copy Order Text&quot;</strong> above and paste directly with <code>Ctrl + V</code>.
-          </p>
         </div>
 
-        {/* Formatted Order Message Preview */}
-        {orderMessage && (
-          <details className="group border border-border/70 rounded-xl overflow-hidden bg-muted/10 text-xs">
-            <summary className="px-4 py-3 font-semibold text-muted-foreground cursor-pointer hover:bg-muted/30 select-none flex items-center justify-between">
-              <span>View Order Message Details</span>
-              <span className="text-[11px] text-primary group-open:rotate-180 transition-transform">▼</span>
-            </summary>
-            <div className="p-4 pt-2 border-t border-border/50">
-              <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-muted-foreground bg-card p-3 rounded-lg border border-border overflow-x-auto">
-                {orderMessage}
-              </pre>
-            </div>
-          </details>
+        {paymentId && (
+          <div className="text-xs text-stone-500 bg-[#FAF6EF] p-3 rounded-xl border border-[#EADBBE] flex flex-wrap items-center justify-between gap-2">
+            <span>Razorpay Payment ID:</span>
+            <span className="font-mono text-stone-700 font-semibold">{paymentId}</span>
+          </div>
         )}
 
-        <div className="pt-2 flex justify-end">
+        {/* Dispatch & Unboxing Advisory */}
+        <div className="space-y-3 bg-[#FAF6EF] p-5 rounded-xl border border-[#EADBBE] text-xs text-stone-600">
+          <h4 className="font-bold text-[#4A171C] text-sm flex items-center gap-1.5">
+            <Truck className="w-4 h-4 text-[#C5A059]" />
+            <span>Shipping &amp; Delivery Timeline:</span>
+          </h4>
+          <ul className="space-y-1.5 leading-relaxed text-[11px]">
+            <li>• Your parcel will be dispatched within <strong>24 to 48 hours</strong> via DTDC Express / India Post Speed Post.</li>
+            <li>• Tracking ID will be sent via SMS / WhatsApp once your package leaves our fulfillment center.</li>
+            <li>• Estimated delivery: <strong>3-5 business days</strong> across India.</li>
+            <li className="text-amber-800 font-medium">📦 <strong>Important Policy:</strong> A continuous 360° unboxing video without cuts is mandatory for any transit damage or missing item claims.</li>
+          </ul>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          <Link
+            href="/account"
+            className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#4A171C] hover:bg-[#380F13] text-[#FAF5EB] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md border border-[#D4AF37]/30"
+          >
+            <span>Track Order in My Account</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[#D4AF37]" />
+          </Link>
+
           <Link
             href="/products"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+            className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-white hover:bg-stone-50 text-stone-700 font-semibold text-xs flex items-center justify-center gap-2 border border-[#EADBBE] transition-colors"
           >
             <span>Continue Shopping</span>
-            <ArrowRight className="w-4 h-4" />
           </Link>
+        </div>
+
+        {/* WhatsApp Concierge Support */}
+        <div className="pt-4 border-t border-[#EADBBE] flex items-center justify-between text-xs text-stone-500">
+          <span>Need assistance with this order?</span>
+          <a
+            href={`https://wa.me/${whatsappPhone}?text=Hi%20Noomi%27s%20Couture%2C%20I%20have%20an%20inquiry%20regarding%20my%20order%20%23${orderNumber}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[#4A171C] font-bold hover:underline"
+          >
+            <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
+            <span>Chat on WhatsApp</span>
+          </a>
         </div>
       </div>
     </div>
@@ -195,8 +187,16 @@ function SuccessContent() {
 
 export default function CheckoutSuccessPage() {
   return (
-    <Suspense fallback={<div className="max-w-3xl mx-auto py-24 text-center">Loading confirmation...</div>}>
-      <SuccessContent />
-    </Suspense>
+    <div className="bg-[#FAF7F2] min-h-screen">
+      <Suspense
+        fallback={
+          <div className="max-w-3xl mx-auto px-4 py-24 text-center">
+            <p className="text-xs text-stone-500 animate-pulse">Loading order confirmation...</p>
+          </div>
+        }
+      >
+        <SuccessContent />
+      </Suspense>
+    </div>
   );
 }

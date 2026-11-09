@@ -40,7 +40,7 @@ function sanitizeData(parsed: any) {
       if (item.customerName === "Sn" || item.piece === "Earing" || item.id === "fb-1793177769534") {
         img = "/uploads/screenshots/customer-review-whatsapp-1.jpg";
       } else {
-        img = "/images/gleamnest-brand-card.png";
+        img = "/images/noomis-brand-card.png";
       }
     }
     return { ...item, imageUrl: img };
@@ -51,22 +51,22 @@ function sanitizeData(parsed: any) {
     let poster = (item.poster || "").trim();
     if (poster.startsWith("data:image/webp") || poster.includes("photo-1611591475806-039775089201") || !poster) {
       wasDirty = true;
-      poster = "/images/gleamnest-brand-card.png";
+      poster = "/images/noomis-brand-card.png";
     }
     let handle = (item.handle || "").trim();
-    if (!handle || handle.toLowerCase().includes("alnaya")) {
-      handle = "@gleamnest.in";
+    if (!handle || handle.toLowerCase().includes("alnaya") || handle.toLowerCase().includes("gleam")) {
+      handle = "@noomi_s_couture";
       wasDirty = true;
     }
     let influencer = (item.influencer || "").trim();
-    if (influencer.toLowerCase().includes("alnaya")) {
-      influencer = "gleamnest";
+    if (influencer.toLowerCase().includes("alnaya") || influencer.toLowerCase().includes("gleam")) {
+      influencer = "noomi_s_couture";
       wasDirty = true;
     }
     return { ...item, poster, handle, influencer };
   });
 
-  // 3. Sanitize Instagram Videos: Purge obsolete placeholder panels and enforce @gleamnest.in
+  // 3. Sanitize Instagram Videos: Purge obsolete placeholder panels and enforce @noomi_s_couture
   const initialInstaCount = parsed.instagramVideos.length;
   parsed.instagramVideos = parsed.instagramVideos.filter((item: any) => {
     const id = String(item.id || "");
@@ -88,24 +88,29 @@ function sanitizeData(parsed: any) {
       poster = "/uploads/images/charm-bangles-poster.jpg";
     } else if (poster.includes("photo-1611591475806-039775089201") || !poster) {
       wasDirty = true;
-      poster = "/images/gleamnest-brand-card.png";
+      poster = "/images/noomis-brand-card.png";
     }
 
     let handle = (item.handle || "").trim();
-    if (!handle || handle.toLowerCase().includes("alnaya")) {
-      handle = "@gleamnest.in";
+    if (!handle || handle.toLowerCase().includes("alnaya") || handle.toLowerCase().includes("gleam") || handle === "@noomis.in" || handle === "@noomiscouture") {
+      handle = "@noomi_s_couture";
       wasDirty = true;
     }
 
     let caption = item.caption || "";
-    if (caption.toLowerCase().includes("alnaya")) {
-      caption = caption.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "GleamNest");
+    if (caption.toLowerCase().includes("alnaya") || caption.toLowerCase().includes("gleam") || caption.includes("@noomiscouture") || caption.includes("@noomis.in")) {
+      caption = caption
+        .replace(/alnaya\.in/gi, "noomi_s_couture")
+        .replace(/gleamnest/gi, "noomi_s_couture")
+        .replace(/@noomiscouture/gi, "@noomi_s_couture")
+        .replace(/@noomis\.in/gi, "@noomi_s_couture")
+        .replace(/alnaya/gi, "Noomi's Couture");
       wasDirty = true;
     }
 
     let instagramLink = item.instagramLink || "";
-    if (instagramLink.toLowerCase().includes("alnaya")) {
-      instagramLink = instagramLink.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "gleamnest.in");
+    if (instagramLink.toLowerCase().includes("alnaya") || instagramLink.toLowerCase().includes("gleam") || instagramLink.includes("noomis.in")) {
+      instagramLink = "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr";
       wasDirty = true;
     }
 
@@ -269,13 +274,13 @@ export async function POST(req: Request) {
       const newInstaVideo = {
         id: `insta-${Date.now()}`,
         title: body.title || "Jewelry Styling Reel",
-        handle: body.handle || "@gleamnest.in",
+        handle: body.handle || "@noomi_s_couture",
         caption: body.caption || "Everyday luxury waterproof jewelry in 304 & 306 steel",
         videoUrl: videoUrl,
         embedUrl: embedUrl,
         poster: body.poster || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=700",
         views: body.views || "15.2K",
-        instagramLink: instagramLink || "https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5",
+        instagramLink: instagramLink || "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr",
       };
 
       if (!data.instagramVideos) data.instagramVideos = [];
@@ -300,13 +305,13 @@ export async function POST(req: Request) {
 
       const newVideo = {
         id: `vid-${Date.now()}`,
-        influencer: body.influencer || "GleamNest Client",
-        handle: body.handle || "@gleamnest.in",
+        influencer: body.influencer || "Noomi's Couture Client",
+        handle: body.handle || "@noomi_s_couture",
         title: body.title || "Jewelry Styling Reel",
-        poster: body.poster || "/images/gleamnest-brand-card.png",
+        poster: body.poster || "/images/noomis-brand-card.png",
         videoUrl: videoUrl,
         views: body.views || "1.2K views",
-        productTitle: body.productTitle || "GleamNest Jewelry",
+        productTitle: body.productTitle || "Noomi's Couture Jewelry",
         productSlug: body.productSlug || "all",
         productPrice: Number(body.productPrice) || 150,
       };
@@ -376,12 +381,12 @@ export async function PUT(req: Request) {
         data.instagramVideos.push({
           id: targetId,
           title: body.title || "Jewelry Styling Reel",
-          handle: body.handle || "@gleamnest.in",
+          handle: body.handle || "@noomi_s_couture",
           caption: body.caption || "",
           videoUrl: body.videoUrl,
           poster: body.poster || "",
           views: body.views || "25K",
-          instagramLink: body.instagramLink || "",
+          instagramLink: body.instagramLink || "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr",
         });
       }
     } else if (type === "video") {

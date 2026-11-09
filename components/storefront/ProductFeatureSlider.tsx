@@ -194,7 +194,7 @@ export function ProductFeatureSlider({ onOpenPolicy, className = "" }: ProductFe
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-primary">
-              GleamNest Assurances & Standards
+              Noomi&apos;s Couture Assurances &amp; Standards
             </span>
           </div>
 

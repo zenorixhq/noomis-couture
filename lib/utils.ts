@@ -40,17 +40,8 @@ export function getProductPrices(
   },
   currencyCode: string = "INR"
 ) {
-  const isQatar = currencyCode === "QAR";
-  const regularPrice = isQatar
-    ? (product.priceQatar !== undefined && product.priceQatar !== null
-        ? product.priceQatar
-        : Math.max(10, Math.round(product.price / 20)))
-    : product.price;
-
-  const salePrice = isQatar
-    ? (product.salePriceQatar !== undefined && product.salePriceQatar !== null ? product.salePriceQatar : undefined)
-    : (product.salePrice !== undefined && product.salePrice !== null ? product.salePrice : undefined);
-
+  const regularPrice = product.price;
+  const salePrice = product.salePrice !== undefined && product.salePrice !== null ? product.salePrice : undefined;
   const effectivePrice = salePrice || regularPrice;
   const discountPercent = salePrice ? calculateDiscountPercent(regularPrice, salePrice) : 0;
 
@@ -59,7 +50,7 @@ export function getProductPrices(
     salePrice,
     effectivePrice,
     discountPercent,
-    isQatar,
+    isQatar: false,
   };
 }
 

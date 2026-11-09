@@ -31,14 +31,35 @@ function matchesCategory(
   const pCat = (product.category || "").trim().toLowerCase();
   const tSlug = (targetSlug || "").trim().toLowerCase();
 
-  if (tSlug === "necklaces-and-chains" || tSlug === "necklaces") {
-    return pCat === "necklaces-and-chains" || pCat === "necklaces";
+  if (tSlug === "bangles" || tSlug === "bangles-kada") {
+    return pCat === "bangles" || pCat === "bangles-kada" || pCat.includes("bangle") || pCat.includes("kada");
   }
-  if (tSlug === "bangles-kada" || tSlug === "bangles") {
-    return pCat === "bangles-kada" || pCat === "bangles";
+  if (tSlug === "bracelets") {
+    return pCat === "bracelets" || pCat.includes("bracelet");
   }
-  if (tSlug === "kids-collection" || tSlug === "kids") {
-    return pCat === "kids-collection" || pCat === "kids";
+  if (tSlug === "charm-necklace" || tSlug === "charms") {
+    return pCat === "charm-necklace" || pCat === "charms" || pCat.includes("charm");
+  }
+  if (tSlug === "pendants" || tSlug === "necklaces-and-chains") {
+    return pCat === "pendants" || pCat === "necklaces-and-chains" || pCat.includes("pendant") || pCat.includes("necklace");
+  }
+  if (tSlug === "watches") {
+    return pCat === "watches" || pCat.includes("watch");
+  }
+  if (tSlug === "rings") {
+    return pCat === "rings" || pCat.includes("ring");
+  }
+  if (tSlug === "hand-chains" || tSlug === "hip-chains") {
+    return pCat === "hand-chains" || pCat === "hip-chains" || pCat.includes("hand-chain") || pCat.includes("chain");
+  }
+  if (tSlug === "anklets") {
+    return pCat === "anklets" || pCat.includes("anklet");
+  }
+  if (tSlug === "earrings") {
+    return pCat === "earrings" || pCat.includes("earring");
+  }
+  if (tSlug === "mangalsutra") {
+    return pCat === "mangalsutra" || pCat.includes("mangalsutra");
   }
   return pCat === tSlug;
 }
@@ -54,7 +75,7 @@ function ProductCatalogContent() {
   const [categoryList, setCategoryList] = useState<Category[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_categories");
+        const cached = sessionStorage.getItem("noomis_categories");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -73,7 +94,7 @@ function ProductCatalogContent() {
         if (Array.isArray(data) && data.length > 0) {
           setCategoryList(data);
           try {
-            sessionStorage.setItem("gleamnest_categories", JSON.stringify(data));
+            sessionStorage.setItem("noomis_categories", JSON.stringify(data));
           } catch (e) {}
         }
       })

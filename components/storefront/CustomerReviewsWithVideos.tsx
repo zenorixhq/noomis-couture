@@ -131,11 +131,11 @@ function AutoPlayingReelCard({
         />
       ) : (
         <img
-          src={reel.poster && !reel.poster.startsWith("data:image/webp") ? reel.poster : "/images/gleamnest-brand-card.png"}
+          src={reel.poster && !reel.poster.startsWith("data:image/webp") ? reel.poster : "/images/noomis-brand-card.png"}
           alt={reel.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+            (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
           }}
         />
       )}
@@ -167,7 +167,7 @@ function AutoPlayingReelCard({
             {reel.title}
           </p>
           <p className="text-[10px] text-white/80 font-medium drop-shadow-sm">
-            {reel.handle && !reel.handle.toLowerCase().includes("alnaya") ? reel.handle : "@gleamnest.in"}
+            {reel.handle && !reel.handle.toLowerCase().includes("alnaya") && !reel.handle.toLowerCase().includes("gleam") ? reel.handle : "@noomi_s_couture"}
           </p>
           {reel.productTitle && (
             <span className="inline-block text-[9px] text-amber-300 font-semibold bg-white/10 px-1.5 py-0.5 rounded">
@@ -184,7 +184,7 @@ export function CustomerReviewsWithVideos() {
   const [videoReels, setVideoReels] = useState<VideoReel[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_cached_reels");
+        const cached = sessionStorage.getItem("noomis_cached_reels");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -194,7 +194,7 @@ export function CustomerReviewsWithVideos() {
                 v.poster?.includes("photo-1611591475806-039775089201")
             );
             if (!hasCorrupt) return parsed;
-            sessionStorage.removeItem("gleamnest_cached_reels");
+            sessionStorage.removeItem("noomis_cached_reels");
           }
         }
       } catch {}
@@ -205,7 +205,7 @@ export function CustomerReviewsWithVideos() {
   const [feedbackScreenshots, setFeedbackScreenshots] = useState<FeedbackScreenshot[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_cached_screenshots");
+        const cached = sessionStorage.getItem("noomis_cached_screenshots");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -215,7 +215,7 @@ export function CustomerReviewsWithVideos() {
                 s.imageUrl?.includes("photo-1611591475806-039775089201")
             );
             if (!hasCorrupt) return parsed;
-            sessionStorage.removeItem("gleamnest_cached_screenshots");
+            sessionStorage.removeItem("noomis_cached_screenshots");
           }
         }
       } catch {}
@@ -226,7 +226,7 @@ export function CustomerReviewsWithVideos() {
   const [reviewQuotes, setReviewQuotes] = useState<ReviewQuote[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = sessionStorage.getItem("gleamnest_cached_quotes");
+        const cached = sessionStorage.getItem("noomis_cached_quotes");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -281,15 +281,15 @@ export function CustomerReviewsWithVideos() {
         if (Array.isArray(data.videoReels) && data.videoReels.length > 0) {
           const cleanReels = data.videoReels.map((r: any) => ({
             ...r,
-            handle: (r.handle && !r.handle.toLowerCase().includes("alnaya")) ? r.handle : "@gleamnest.in",
-            influencer: (r.influencer && !r.influencer.toLowerCase().includes("alnaya")) ? r.influencer : "gleamnest",
+            handle: (r.handle && !r.handle.toLowerCase().includes("alnaya") && !r.handle.toLowerCase().includes("gleam")) ? r.handle : "@noomi_s_couture",
+            influencer: (r.influencer && !r.influencer.toLowerCase().includes("alnaya") && !r.influencer.toLowerCase().includes("gleam")) ? r.influencer : "noomi_s_couture",
             poster: (r.poster?.startsWith("data:image/webp") || r.poster?.includes("photo-1611591475806-039775089201") || !r.poster)
-              ? "/images/gleamnest-brand-card.png"
+              ? "/images/noomis-brand-card.png"
               : r.poster,
           }));
           setVideoReels(cleanReels);
           try {
-            sessionStorage.setItem("gleamnest_cached_reels", JSON.stringify(cleanReels));
+            sessionStorage.setItem("noomis_cached_reels", JSON.stringify(cleanReels));
           } catch {}
         }
         if (Array.isArray(data.feedbackScreenshots) && data.feedbackScreenshots.length > 0) {
@@ -298,19 +298,19 @@ export function CustomerReviewsWithVideos() {
             if (img.startsWith("data:image/webp") || img.includes("photo-1611591475806-039775089201") || !img) {
               img = (s.customerName === "Sn" || s.piece === "Earing" || s.id === "fb-1793177769534")
                 ? "/uploads/screenshots/customer-review-whatsapp-1.jpg"
-                : "/images/gleamnest-brand-card.png";
+                : "/images/noomis-brand-card.png";
             }
             return { ...s, imageUrl: img };
           });
           setFeedbackScreenshots(cleanScreenshots);
           try {
-            sessionStorage.setItem("gleamnest_cached_screenshots", JSON.stringify(cleanScreenshots));
+            sessionStorage.setItem("noomis_cached_screenshots", JSON.stringify(cleanScreenshots));
           } catch {}
         }
         if (Array.isArray(data.reviews) && data.reviews.length > 0) {
           setReviewQuotes(data.reviews);
           try {
-            sessionStorage.setItem("gleamnest_cached_quotes", JSON.stringify(data.reviews));
+            sessionStorage.setItem("noomis_cached_quotes", JSON.stringify(data.reviews));
           } catch {}
         }
       })
@@ -569,7 +569,7 @@ export function CustomerReviewsWithVideos() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     loading="lazy"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                      (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                     }}
                   />
 
@@ -791,7 +791,7 @@ export function CustomerReviewsWithVideos() {
                 alt="Customer feedback screenshot"
                 className="w-auto h-auto max-w-full max-h-[46vh] sm:max-h-[52vh] object-contain rounded-xl shadow-md"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                  (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                 }}
               />
             </div>

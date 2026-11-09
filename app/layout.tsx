@@ -10,7 +10,7 @@ import { WhatsAppFloat } from "@/components/storefront/WhatsAppFloat";
 import { SmoothScrollProvider } from "@/components/common/SmoothScrollProvider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gleamnest.in"),
+  metadataBase: new URL("https://noomiscouture.com"),
   title: {
     default: `${storeConfig.meta.name} | ${storeConfig.meta.tagline}`,
     template: `%s | ${storeConfig.meta.name}`,
@@ -19,26 +19,24 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-48x48.png", sizes: "48x48", type: "image/png" },
       { url: "/icon.png", sizes: "32x32", type: "image/png" },
     ],
     shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://gleamnest.in",
-    siteName: "GleamNest",
+    url: "https://noomiscouture.com",
+    siteName: "Noomi's Couture",
     title: `${storeConfig.meta.name} | ${storeConfig.meta.tagline}`,
     description: storeConfig.meta.description,
     images: [
       {
-        url: "/images/brand-logo-mark-raw.png",
-        width: 1024,
-        height: 1024,
-        alt: "GleamNest Luxury Jewelry",
+        url: "/images/noomis-couture-square.png",
+        width: 426,
+        height: 421,
+        alt: "Noomi's Couture Luxury Jewelry",
       },
     ],
   },
@@ -46,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${storeConfig.meta.name} | ${storeConfig.meta.tagline}`,
     description: storeConfig.meta.description,
-    images: ["/images/brand-logo-mark-raw.png"],
+    images: ["/images/noomis-couture-square.png"],
   },
 };
 

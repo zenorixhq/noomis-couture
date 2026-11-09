@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       return NextResponse.json([]);
     }
 
-    const formatted = dbOrders.map((o) => {
+    const formatted = dbOrders.map((o: any) => {
       let parsedItems = [];
       try {
         if (o.itemsJson) {
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
           id: `cust-${o.id}`,
           name: o.customerName || "Valued Customer",
           fullName: o.customerName || "Valued Customer",
-          email: o.customerEmail || "whatsapp@gleamnest.in",
+          email: o.customerEmail || "concierge@noomiscouture.com",
           phone: o.customerPhone || "",
           shippingAddress: {
             line1: o.shippingAddress || "Direct Delivery",

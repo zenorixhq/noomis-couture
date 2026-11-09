@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { put } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
+import sharp from "sharp";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,7 +12,8 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const folderType = (formData.get("folder") as string) || "screenshots"; // "screenshots" | "videos" | "images"
+    const folderType = (formData.get("folder") as string) || "images";
+    const isHeroExplicit = formData.get("isHero") === "true";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -19,41 +21,57 @@ export async function POST(req: Request) {
 
     const safeFolder = folderType === "videos" ? "videos" : folderType === "images" ? "images" : "screenshots";
     const originalName = file.name || "upload";
-    const ext = path.extname(originalName).toLowerCase() || (safeFolder === "videos" ? ".mp4" : ".jpg");
+    let ext = path.extname(originalName).toLowerCase() || (safeFolder === "videos" ? ".mp4" : ".jpg");
     const cleanBase = path.basename(originalName, ext).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
+
+    const isHero = isHeroExplicit || originalName.toLowerCase().includes("hero") || folderType === "hero";
+    const isImage = safeFolder !== "videos" && (file.type?.startsWith("image/") || [".jpg", ".jpeg", ".png", ".webp", ".avif"].includes(ext));
+
+    const bytes = await file.arrayBuffer();
+    let buffer = Buffer.from(bytes);
+    let mimeType = file.type || "image/jpeg";
+
+    // Maintain low data footprint: Automatically compress all images EXCEPT hero image!
+    if (isImage && !isHero) {
+      try {
+        const compressed = await sharp(buffer)
+          .rotate() // Auto-orient based on EXIF
+          .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 80, effort: 4 })
+          .toBuffer();
+
+        buffer = compressed;
+        mimeType = "image/webp";
+        ext = ".webp";
+      } catch (sharpErr) {
+        console.warn("Sharp image compression fallback to original buffer:", sharpErr);
+      }
+    }
+
     const fileName = `${cleanBase}-${Date.now()}${ext}`;
 
-    // 1. If Vercel Blob is configured (via BLOB_READ_WRITE_TOKEN env variable)
+    // 1. If Vercel Blob is configured
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
-        const blob = await put(`uploads/${safeFolder}/${fileName}`, file, {
+        const blob = await put(`uploads/${safeFolder}/${fileName}`, buffer, {
           access: "public",
+          contentType: mimeType,
           addRandomSuffix: true,
         });
 
-        return NextResponse.json(
-          {
-            success: true,
-            url: blob.url,
-            fileName,
-            size: file.size,
-            provider: "vercel-blob",
-          },
-          {
-            headers: {
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-            },
-          }
-        );
+        return NextResponse.json({
+          success: true,
+          url: blob.url,
+          fileName,
+          size: buffer.length,
+          provider: "vercel-blob",
+        });
       } catch (blobErr: any) {
         console.error("Vercel Blob upload failed, falling back:", blobErr);
       }
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // 2. In local development or writable environments, attempt to save to /public/uploads
+    // 2. In local development or writable environments: save to /public/uploads
     try {
       const uploadDir = path.join(process.cwd(), "public", "uploads", safeFolder);
       if (!fs.existsSync(uploadDir)) {
@@ -64,53 +82,33 @@ export async function POST(req: Request) {
       fs.writeFileSync(filePath, buffer);
 
       const publicUrl = `/uploads/${safeFolder}/${fileName}`;
-      return NextResponse.json(
-        {
-          success: true,
-          url: publicUrl,
-          fileName,
-          size: file.size,
-          provider: "local-fs",
-        },
-        {
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-          },
-        }
-      );
+      return NextResponse.json({
+        success: true,
+        url: publicUrl,
+        fileName,
+        size: buffer.length,
+        provider: "local-fs",
+      });
     } catch (fsErr: any) {
-      // Expected on Vercel serverless where /var/task is read-only
-      console.warn("Local filesystem write skipped (read-only environment):", fsErr.message);
+      console.warn("Local filesystem write skipped:", fsErr.message);
     }
 
-    // 3. Fallback for serverless (Vercel) when BLOB_READ_WRITE_TOKEN is not yet connected:
-    // Allows crystal-clear screenshots and product images up to 2.5MB. NEVER return base64 for videos!
-    if (safeFolder !== "videos" && buffer.length <= 2.5 * 1024 * 1024) {
-      const mimeType = file.type || (originalName.endsWith(".png") ? "image/png" : "image/jpeg");
+    // 3. Fallback for serverless data URLs if under 2MB
+    if (safeFolder !== "videos" && buffer.length <= 2 * 1024 * 1024) {
       const dataUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
-
-      return NextResponse.json(
-        {
-          success: true,
-          url: dataUrl,
-          fileName,
-          size: file.size,
-          provider: "data-url",
-        },
-        {
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-          },
-        }
-      );
+      return NextResponse.json({
+        success: true,
+        url: dataUrl,
+        fileName,
+        size: buffer.length,
+        provider: "data-url",
+      });
     }
 
-    // 4. Database Cloud Fallback (Neon PostgreSQL):
-    // Save to MediaStorage table and serve via /api/media/[id] with native range streaming!
+    // 4. Neon PostgreSQL Database Cloud Media Storage
     try {
       const fileId = `${Date.now()}-${cleanBase}${ext}`;
       const base64Data = buffer.toString("base64");
-      const mimeType = file.type || (safeFolder === "videos" ? "video/mp4" : "image/jpeg");
 
       await prisma.mediaStorage.upsert({
         where: { id: fileId },
@@ -128,32 +126,19 @@ export async function POST(req: Request) {
       });
 
       const publicUrl = `/api/media/${encodeURIComponent(fileId)}`;
-      return NextResponse.json(
-        {
-          success: true,
-          url: publicUrl,
-          fileName,
-          size: file.size,
-          provider: "database",
-        },
-        {
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-          },
-        }
-      );
+      return NextResponse.json({
+        success: true,
+        url: publicUrl,
+        fileName,
+        size: buffer.length,
+        provider: "database",
+      });
     } catch (dbErr: any) {
       console.error("Database media storage fallback failed:", dbErr);
     }
 
-    // 5. If everything failed
     return NextResponse.json(
-      {
-        error:
-          safeFolder === "videos"
-            ? "Video upload failed. Please verify storage configuration or paste a public video / Instagram Reel URL."
-            : "Image upload failed. Please verify storage configuration or paste an image URL.",
-      },
+      { error: "Image upload failed. Please try again." },
       { status: 400 }
     );
   } catch (err: any) {

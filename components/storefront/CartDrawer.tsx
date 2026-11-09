@@ -39,17 +39,11 @@ export function CartDrawer() {
 
   // Memoized, 0ms fast price calculations directly from in-memory cart state
   const { subtotal, discount, shipping, total, itemCount } = useMemo(() => {
-    const isQatar = selectedCurrency === "QAR";
     let sub = 0;
     let count = 0;
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
-      const price = isQatar
-        ? it.priceQatar !== undefined && it.priceQatar !== null
-          ? it.priceQatar
-          : Math.max(10, Math.round(it.price / 20))
-        : it.price;
-      sub += price * it.quantity;
+      sub += it.price * it.quantity;
       count += it.quantity;
     }
 
@@ -62,13 +56,13 @@ export function CartDrawer() {
     }
 
     let ship = 0;
-    if (sub > 0 && !isQatar && sub < storeConfig.commerce.freeShippingThreshold) {
+    if (sub > 0 && sub < storeConfig.commerce.freeShippingThreshold) {
       ship = storeConfig.commerce.flatShippingFee;
     }
 
     const tot = Math.max(0, sub - disc + ship);
     return { subtotal: sub, discount: disc, shipping: ship, total: tot, itemCount: count };
-  }, [items, appliedCoupon, selectedCurrency]);
+  }, [items, appliedCoupon]);
 
   const [couponCode, setCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState<{ type: "success" | "error"; text: string } | null>(
@@ -91,10 +85,9 @@ export function CartDrawer() {
     };
   }, [isCartOpen, closeCart]);
 
-  const isQatar = selectedCurrency === "QAR";
   const freeShippingThreshold = storeConfig.commerce.freeShippingThreshold;
-  const progressPercent = isQatar ? 100 : Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
-  const amountNeeded = isQatar ? 0 : Math.max(0, freeShippingThreshold - subtotal);
+  const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
+  const amountNeeded = Math.max(0, freeShippingThreshold - subtotal);
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,12 +153,7 @@ export function CartDrawer() {
             <div className="flex items-center justify-between text-xs font-medium mb-1.5">
               <span className="flex items-center gap-1.5 text-foreground">
                 <Truck className="w-4 h-4 text-primary flex-shrink-0" />
-                {isQatar ? (
-                  <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Free Delivery Across Qatar (Within 14 Days)!
-                  </span>
-                ) : amountNeeded === 0 ? (
+                {amountNeeded === 0 ? (
                   <span className="text-emerald-600 font-semibold flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5" />
                     Complimentary Shipping Unlocked!
@@ -217,7 +205,7 @@ export function CartDrawer() {
                       decoding="async"
                       className="w-full h-full object-contain rounded-lg max-w-full max-h-full"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+                        (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
                       }}
                     />
                   </div>
@@ -273,14 +261,7 @@ export function CartDrawer() {
                       </div>
 
                       <span className="text-sm font-bold text-foreground">
-                        {formatPrice(
-                          (isQatar
-                            ? item.priceQatar !== undefined && item.priceQatar !== null
-                              ? item.priceQatar
-                              : Math.max(10, Math.round(item.price / 20))
-                            : item.price) * item.quantity,
-                          selectedCurrency
-                        )}
+                        {formatPrice(item.price * item.quantity, selectedCurrency)}
                       </span>
                     </div>
                   </div>
@@ -311,7 +292,7 @@ export function CartDrawer() {
                   <form onSubmit={handleApplyCoupon} className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Promo code (e.g. GLEAM5)"
+                      placeholder="Promo code (e.g. NOOMI5)"
                       value={couponCode}
                       onChange={(e) => {
                         setCouponCode(e.target.value);
@@ -357,7 +338,7 @@ export function CartDrawer() {
                 ) : null}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Estimated Shipping</span>
-                  <span>{shipping === 0 ? (isQatar ? "FREE (Within 14 Days)" : "FREE") : formatPrice(shipping, selectedCurrency)}</span>
+                  <span>{shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">
                   <span>Estimated Total</span>
@@ -369,11 +350,17 @@ export function CartDrawer() {
               <Link
                 href="/checkout"
                 onClick={closeCart}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#25D366] text-white font-bold text-sm hover:bg-[#20ba59] transition-all shadow-md active:scale-[0.99]"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl bg-[#4A171C] hover:bg-[#380F13] text-[#FAF5EB] font-bold text-sm transition-all shadow-[0_4px_16px_rgba(74,23,28,0.35)] hover:shadow-[0_6px_20px_rgba(74,23,28,0.5)] active:scale-[0.99] border border-[#D4AF37]/30 group"
               >
-                <span>Proceed to WhatsApp Checkout</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Proceed to Secure Checkout</span>
+                <ArrowRight className="w-4 h-4 text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
               </Link>
+
+              <div className="pt-1 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 font-medium">
+                  🔒 256-Bit Encrypted • Razorpay Gateway • Instant Dispatch
+                </span>
+              </div>
             </div>
           )}
         </div>

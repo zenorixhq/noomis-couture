@@ -24,38 +24,24 @@
 }
 
 /* ============================================================ */
-/* LENIS HIGH-FPS SMOOTH SCROLL & GPU ACCELERATION              */
+/* NATIVE SMOOTH SCROLL & FLUID PERFORMANCE                     */
 /* ============================================================ */
-html.lenis,
-html.lenis body {
-  height: auto;
+html {
+  scroll-behavior: smooth;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-
-.lenis.lenis-smooth iframe {
-  pointer-events: none;
+body {
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
 /* High FPS Compositor Layers: Prevent scroll repaints */
-header,
-.sticky,
-.fixed,
 .whatsapp-float-btn {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   backface-visibility: hidden;
-  perspective: 1000px;
 }
 
 /* Prevent image layout thrashing during scroll */
@@ -65,29 +51,29 @@ img {
 
 @layer base {
   :root {
-    /* GleamNest Warm Champagne Ivory & Gold Luxury Theme */
-    --primary: 38 58% 46%;          /* Elegant Champagne Gold #BA9241 */
-    --primary-hover: 38 65% 38%;
-    --primary-foreground: 0 0% 100%;
+    /* Noomi's Couture Rich Burgundy Wine & Warm Gold Luxury Theme */
+    --primary: 354 53% 19%;          /* Royal Burgundy Wine #4A171C */
+    --primary-hover: 354 58% 14%;    /* Deep Velvet Wine #380F13 */
+    --primary-foreground: 45 40% 96%;
 
-    --secondary: 40 30% 93%;        /* Soft Ivory Stone */
-    --secondary-foreground: 24 10% 15%;
+    --secondary: 38 25% 94%;         /* Soft Champagne Stone #F6F3ED */
+    --secondary-foreground: 354 45% 15%;
 
-    --accent: 38 75% 52%;           /* Sparkling Gold Accent */
-    --accent-foreground: 0 0% 100%;
+    --accent: 39 60% 50%;            /* Warm Shimmering Gold #D4AF37 */
+    --accent-foreground: 354 53% 19%;
 
-    --background: 40 33% 97%;       /* Warm Champagne Ivory #FAF7F2 */
-    --foreground: 24 10% 11%;       /* Rich Charcoal #1C1917 */
+    --background: 38 25% 98%;        /* Warm Champagne Ivory #FAF8F5 */
+    --foreground: 354 35% 12%;        /* Deep Dark Burgundy Charcoal #240A0D */
 
     --card: 0 0% 100%;
-    --card-foreground: 24 10% 11%;
+    --card-foreground: 354 35% 12%;
 
-    --muted: 40 22% 93%;
-    --muted-foreground: 30 10% 46%;
+    --muted: 38 20% 94%;
+    --muted-foreground: 354 15% 42%;
 
-    --border: 38 25% 88%;           /* Warm Champagne Border */
+    --border: 38 25% 88%;            /* Warm Champagne Gold Border #EFE5D5 */
     --input: 38 25% 88%;
-    --ring: 38 58% 46%;
+    --ring: 354 53% 19%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -99,17 +85,17 @@ img {
   }
 
   .dark {
-    --background: 24 10% 10%;
+    --background: 354 45% 8%;        /* Midnight Wine Noir #180507 */
     --foreground: 40 30% 96%;
 
-    --card: 24 10% 14%;
+    --card: 354 40% 12%;             /* Deep Burgundy Velvet #26090D */
     --card-foreground: 40 30% 96%;
 
-    --muted: 24 10% 18%;
-    --muted-foreground: 40 15% 65%;
+    --muted: 354 30% 16%;
+    --muted-foreground: 38 25% 65%;
 
-    --border: 38 20% 25%;
-    --input: 38 20% 25%;
+    --border: 39 35% 24%;
+    --input: 39 35% 24%;
   }
 }
 
@@ -218,5 +204,46 @@ img {
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+/* ============================================================ */
+/* INITIAL LOAD SCREEN ANIMATIONS & SHIMMER                      */
+/* ============================================================ */
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    #F3E5C2 0%,
+    #FFFFFF 30%,
+    #D4AF37 55%,
+    #FFFFFF 70%,
+    #F3E5C2 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: goldShimmer 3.8s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 14s linear infinite;
 }
 

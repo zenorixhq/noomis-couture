@@ -38,7 +38,7 @@ export function AboutUsSection() {
           </div>
 
           <p className="text-xs sm:text-sm text-[#5C5346] leading-relaxed font-light max-w-lg mx-auto px-2">
-            GleamNest designs modern, everyday luxury jewellery pieces handcrafted from premium 304 & 306 grade stainless steel. We believe in timeless daily elegance.
+            Noomi&apos;s Couture designs modern, everyday luxury jewellery pieces handcrafted from premium 304 & 306 grade stainless steel. We empower you to wear your confidence daily.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export function AboutUsSection() {
               <div className="w-full max-w-[340px] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[540px] aspect-[16/10] rounded-sm overflow-hidden shadow-sm md:shadow-md border border-[#E2D5BE] bg-[#F0E6D2]">
                 <img
                   src="/images/about-model-landscape.jpg"
-                  alt="GleamNest Waterproof Necklace & Ring Lifestyle Landscape"
+                  alt="Noomi's Couture Waterproof Necklace & Ring Lifestyle Landscape"
                   className="w-full h-full object-cover object-bottom hover:scale-105 transition-transform duration-700"
                 />
               </div>
@@ -62,7 +62,7 @@ export function AboutUsSection() {
 
             <div className="space-y-2 sm:space-y-3 max-w-md lg:max-w-lg">
               <p className="text-xs sm:text-sm text-[#5C5346] leading-relaxed font-light">
-                Our goal is to create products that are made for life. We encourage people to think about jewellery as part of their identity and legacy.
+                Our mission is to create pieces that are made for life. At Noomi&apos;s Couture, we believe jewellery should be an effortless extension of your spirit—empowering you to wear your confidence every single day.
               </p>
 
               <div>
@@ -86,7 +86,7 @@ export function AboutUsSection() {
               <div className="w-full aspect-[2/3] rounded-sm overflow-hidden shadow-md md:shadow-xl border border-[#E2D5BE] bg-[#F0E6D2]">
                 <img
                   src="/images/about-model-portrait.jpg"
-                  alt="GleamNest Fine Jewelry Portrait"
+                  alt="Noomi's Couture Fine Jewelry Portrait"
                   className="w-full h-full object-cover object-bottom hover:scale-105 transition-transform duration-700"
                 />
               </div>

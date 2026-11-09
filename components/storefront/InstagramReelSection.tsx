@@ -115,7 +115,7 @@ function AutoPlayingInstaCard({
           alt={vid.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = "/images/gleamnest-brand-card.png";
+            (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
           }}
         />
       )}
@@ -152,10 +152,10 @@ function AutoPlayingInstaCard({
             {vid.title}
           </p>
           <p className="text-[11px] text-white/85 line-clamp-1 font-light drop-shadow-sm">
-            {vid.caption?.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "GleamNest")}
+            {vid.caption?.replace(/alnaya\.in/gi, "noomiscouture.com").replace(/alnaya/gi, "Noomi's Couture")}
           </p>
           <span className="inline-block text-[10px] text-[#F3DFB0] font-mono tracking-wider">
-            {vid.handle && !vid.handle.toLowerCase().includes("alnaya") ? vid.handle : "@gleamnest.in"}
+            {vid.handle && !vid.handle.toLowerCase().includes("alnaya") && !vid.handle.toLowerCase().includes("gleam") ? vid.handle : "@noomi_s_couture"}
           </span>
         </div>
       </div>
@@ -166,14 +166,14 @@ function AutoPlayingInstaCard({
 // Auto-purge obsolete Instagram cache keys from browser storage
 if (typeof window !== "undefined") {
   try {
-    localStorage.removeItem("gleamnest_instagram_reels");
-    localStorage.removeItem("gleamnest_instagram_reels_v2");
-    sessionStorage.removeItem("gleamnest_instagram_reels");
-    sessionStorage.removeItem("gleamnest_instagram_reels_v2");
+    localStorage.removeItem("noomis_instagram_reels");
+    localStorage.removeItem("noomis_instagram_reels_v2");
+    sessionStorage.removeItem("noomis_instagram_reels");
+    sessionStorage.removeItem("noomis_instagram_reels_v2");
   } catch (e) {}
 }
 
-const INSTA_STORAGE_KEY = "gleamnest_instagram_reels_v3";
+const INSTA_STORAGE_KEY = "noomis_instagram_reels_v3";
 
 export function InstagramReelSection() {
   const [videos, setVideos] = useState<InstagramVideoItem[]>(() => {
@@ -241,14 +241,16 @@ export function InstagramReelSection() {
             .filter((v: any) => !String(v.id || "").startsWith("fth-panel-") && v.id !== "insta-1" && v.id !== "insta-2")
             .map((v: any) => ({
               ...v,
-              handle: (v.handle && !v.handle.toLowerCase().includes("alnaya")) ? v.handle : "@gleamnest.in",
-              caption: (v.caption || "").replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "GleamNest"),
-              instagramLink: (v.instagramLink || "").replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "gleamnest.in") || "https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5",
+              handle: (v.handle && !v.handle.toLowerCase().includes("alnaya") && !v.handle.toLowerCase().includes("gleam")) ? v.handle : "@noomi_s_couture",
+              caption: (v.caption || "").replace(/alnaya\.in/gi, "noomiscouture.com").replace(/alnaya/gi, "Noomi's Couture").replace(/@noomiscouture(\.in)?/gi, "@noomi_s_couture"),
+              instagramLink: (v.instagramLink && !v.instagramLink.toLowerCase().includes("alnaya") && !v.instagramLink.toLowerCase().includes("gleam"))
+                ? v.instagramLink
+                : "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr",
               poster: (v.poster?.startsWith("data:image/webp")
                 ? "/uploads/images/charm-bangles-poster.jpg"
                 : v.poster?.includes("photo-1611591475806-039775089201")
-                ? "/images/gleamnest-brand-card.png"
-                : v.poster) || "/images/gleamnest-brand-card.png",
+                ? "/images/noomis-brand-card.png"
+                : v.poster) || "/images/noomis-brand-card.png",
             }));
           setVideos(cleanVideos);
           try {
@@ -303,12 +305,12 @@ export function InstagramReelSection() {
           </div>
 
           <a
-            href="https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5"
+            href="https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 font-editorial text-3xl sm:text-5xl md:text-6xl font-normal tracking-tight text-[#1C1917] hover:text-[#C5A059] transition-colors"
           >
-            <span>@gleamnest.in</span>
+            <span>@noomi_s_couture</span>
             <Instagram className="w-6 h-6 sm:w-8 sm:h-8 text-[#C5A059]" />
           </a>
           <p className="text-xs sm:text-sm text-stone-600 font-light max-w-md mx-auto">
@@ -361,13 +363,13 @@ export function InstagramReelSection() {
         {/* Bottom CTA to Instagram Profile */}
         <div className="text-center pt-2">
           <a
-            href="https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5"
+            href="https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#1C1917] text-[#1C1917] hover:bg-[#1C1917] hover:text-white font-semibold text-xs tracking-wider uppercase transition-all shadow-sm"
           >
             <Instagram className="w-4 h-4" />
-            <span>Follow @gleamnest.in on Instagram</span>
+            <span>Follow @noomi_s_couture on Instagram</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
@@ -393,7 +395,7 @@ export function InstagramReelSection() {
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-xs font-bold truncate max-w-[180px] sm:max-w-[220px]">{activeVideo.title}</h4>
-                  <p className="text-[10px] text-stone-400 truncate">{activeVideo.handle && !activeVideo.handle.toLowerCase().includes("alnaya") ? activeVideo.handle : "@gleamnest.in"}</p>
+                  <p className="text-[10px] text-stone-400 truncate">{activeVideo.handle && !activeVideo.handle.toLowerCase().includes("alnaya") && !activeVideo.handle.toLowerCase().includes("gleam") ? activeVideo.handle : "@noomi_s_couture"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -447,12 +449,12 @@ export function InstagramReelSection() {
             <div className="flex-shrink-0 p-3.5 sm:p-4 bg-stone-900 border-t border-stone-800 flex items-center justify-between gap-3 text-white">
               <div className="space-y-0.5 min-w-0 max-w-[65%]">
                 <p className="text-xs font-semibold truncate">{activeVideo.title}</p>
-                <p className="text-[11px] text-stone-400 line-clamp-1">{activeVideo.caption?.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "GleamNest")}</p>
+                <p className="text-[11px] text-stone-400 line-clamp-1">{activeVideo.caption?.replace(/alnaya\.in/gi, "noomiscouture.com").replace(/alnaya/gi, "Noomi's Couture")}</p>
               </div>
 
               {activeVideo.instagramLink && (
                 <a
-                  href={activeVideo.instagramLink?.replace(/alnaya\.in/gi, "gleamnest.in").replace(/alnaya/gi, "gleamnest.in") || "https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5"}
+                  href={activeVideo.instagramLink?.replace(/alnaya\.in/gi, "noomiscouture.com").replace(/alnaya/gi, "noomiscouture") || "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3.5 py-1.5 rounded-full bg-[#E1306C] text-white text-xs font-semibold hover:bg-[#C1275B] transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"

@@ -66,70 +66,69 @@ export interface StoreConfig {
 
 export const storeConfig: StoreConfig = {
   meta: {
-    name: "GleamNest",
-    tagline: "The place where elegance and sparkle come together.",
-    description: "Waterproof & Anti-Tarnish Everyday Luxury Jewellery crafted in Premium 304 & 306 Grade Stainless Steel. Wear it daily, anywhere.",
-    url: "https://gleamnest.in",
+    name: "Noomi's Couture",
+    tagline: "Wear Your Confidence",
+    description: "Waterproof & Anti-Tarnish Everyday Luxury Jewellery by Noomi's Couture. Crafted in Premium 304 & 306 Grade Stainless Steel with enduring mirror gold finish. Wear your confidence daily, anywhere.",
+    url: "https://noomiscouture.com",
     favicon: "/favicon.ico",
   },
   brand: {
     logo: {
-      text: "GleamNest",
-      subtext: "The place where elegance and sparkle come together.",
-      imageUrl: "",
+      text: "Noomi's Couture",
+      subtext: "WEAR YOUR CONFIDENCE",
+      imageUrl: "/images/noomis-logo-banner-transparent.png",
     },
     theme: {
-      // Warm Champagne Gold & Rich Espresso Luxury Palette
-      primary: "40 75% 38%",       // Elegant Royal Gold
-      primaryHover: "40 75% 30%",
-      primaryForeground: "0 0% 100%",
-      accent: "158 64% 36%",        // Emerald Green accent
-      accentForeground: "0 0% 100%",
+      // Signature Burgundy Maroon & Warm Champagne Gold Palette from Logo
+      primary: "354 53% 19%",       // Royal Burgundy Wine #4A171C
+      primaryHover: "354 58% 14%",  // Deep Velvet Wine #380F13
+      primaryForeground: "45 40% 96%",
+      accent: "39 60% 50%",         // Warm Shimmering Gold #D4AF37
+      accentForeground: "354 53% 19%",
       borderRadius: "0.75rem",
       fontHeading: "var(--font-heading)",
       fontSans: "var(--font-sans)",
     },
     contact: {
-      email: "gleamnest.in@gmail.com",
+      email: "concierge@noomiscouture.com",
       phone: "+91 96339 56222",
       whatsappNumber: "919633956222",
-      address: "Kerala, India • Pan-India Express Delivery",
+      address: "Noomi's Couture • Pan-India & Global Express Delivery",
       hours: "Mon – Sat: 9:30 AM – 8:00 PM IST",
     },
     socials: {
-      instagram: "https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5",
+      instagram: "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr",
       whatsapp: "https://wa.me/919633956222",
-      facebook: "https://www.facebook.com/share/1DXg9Puzkj/",
+      facebook: "https://www.facebook.com/noomiscouture",
     },
   },
   commerce: {
     defaultCurrency: "INR",
     supportedCurrencies: [
       { code: "INR", symbol: "₹", name: "India (₹)", flag: "🇮🇳", rate: 1.0 },
-      { code: "QAR", symbol: "QAR", name: "Qatar (QAR)", flag: "🇶🇦", rate: 1.0 },
     ],
     freeShippingThreshold: 799,
     flatShippingFee: 40,
-    taxRatePercent: 0, // Direct chat pricing with inclusive pricing
+    taxRatePercent: 0,
     taxInclusive: true,
-    checkoutMode: "whatsapp",
+    checkoutMode: "gateway",
     activeCoupons: [
       {
-        code: "GLEAM5",
+        code: "NOOMI5",
         discountType: "percentage",
         amount: 5,
         firstPurchaseOnly: true,
         description: "5% off your 1st purchase (new customers only)",
+      },
+      {
+        code: "CONFIDENCE10",
+        discountType: "percentage",
+        amount: 10,
+        firstPurchaseOnly: false,
+        description: "10% off for orders above ₹1499",
       },
       {
         code: "WELCOME5",
-        discountType: "percentage",
-        amount: 5,
-        firstPurchaseOnly: true,
-        description: "5% off your 1st purchase (new customers only)",
-      },
-      {
-        code: "FIRST5",
         discountType: "percentage",
         amount: 5,
         firstPurchaseOnly: true,
@@ -143,8 +142,8 @@ export const storeConfig: StoreConfig = {
     enableQuickView: true,
     enableStockBadges: true,
     enableAnnouncementBar: true,
-    announcementText: "✨ 100% Anti-Tarnish & Waterproof Jewelry • Premium 304 & 306 Grade Stainless Steel • Free Delivery in Qatar (Within 14 Days) & Pan-India on Orders Above ₹799 • Shipping ₹40 • Order on WhatsApp",
+    announcementText: "✨ Noomi's Couture • Wear Your Confidence • 100% Anti-Tarnish & Waterproof Jewelry • Free Pan-India Delivery Above ₹799",
     enableWhatsAppFloat: true,
-    enableCurrencySwitcher: true,
+    enableCurrencySwitcher: false,
   },
 };

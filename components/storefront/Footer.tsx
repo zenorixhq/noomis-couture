@@ -32,7 +32,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-[#0C0A09] text-[#FAF7F2] border-t border-stone-800/80 mt-16 sm:mt-24 select-none">
+    <footer className="bg-[#180507] text-[#FAF7F2] border-t border-[#4A171C]/70 mt-16 sm:mt-24 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         {/* Main 4-Column Minimalist Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
@@ -41,14 +41,14 @@ export function Footer() {
           <div className="lg:col-span-4 space-y-4">
             <BrandLogo variant="full" showTagline={true} theme="dark" />
             
-            <p className="text-xs sm:text-sm text-stone-400 font-light leading-relaxed max-w-sm">
-              Fine jewelry for the skin, not the vault. Handcrafted in 304 & 306 surgical-grade stainless steel with mirror PVD gold finish. 100% waterproof and anti-tarnish.
+            <p className="text-xs sm:text-sm text-stone-300 font-light leading-relaxed max-w-sm">
+              Fine jewellery for the skin, not the vault. Handcrafted in 304 & 306 surgical-grade stainless steel with mirror gold finish. 100% waterproof and anti-tarnish. Wear your confidence.
             </p>
 
             {/* Social & WhatsApp Buttons */}
             <div className="flex items-center gap-3 pt-1">
               <a
-                href={storeConfig.brand.socials.instagram || "https://www.instagram.com/gleamnest.in?igsh=c3I4M2h1YmprdXI5"}
+                href={storeConfig.brand.socials.instagram || "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr"}
                 target="_blank"
                 rel="noreferrer"
                 className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-stone-400 hover:text-[#C5A059] hover:border-[#C5A059]/60 hover:bg-[#C5A059]/10 transition-all"
@@ -86,13 +86,18 @@ export function Footer() {
             </h5>
             <ul className="space-y-2 text-xs sm:text-[13px] text-stone-400">
               <li>
-                <Link href="/products?category=new-arrivals" className="hover:text-white transition-colors text-white font-medium flex items-center gap-1">
-                  <span>✦ New Arrivals</span>
+                <Link href="/products?category=bangles" className="hover:text-white transition-colors">
+                  Bangles & Kada
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=necklaces-and-chains" className="hover:text-white transition-colors">
-                  Necklaces & Chains
+                <Link href="/products?category=bracelets" className="hover:text-white transition-colors">
+                  Bracelets
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=charm-necklace" className="hover:text-white transition-colors">
+                  Charm Necklaces
                 </Link>
               </li>
               <li>
@@ -103,11 +108,6 @@ export function Footer() {
               <li>
                 <Link href="/products?category=earrings" className="hover:text-white transition-colors">
                   Earrings & Hoops
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=bracelets" className="hover:text-white transition-colors">
-                  Bracelets & Bangles
                 </Link>
               </li>
               <li>
@@ -185,7 +185,7 @@ export function Footer() {
             {subscribed ? (
               <div className="p-3 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/30 text-xs text-[#FAF7F2] font-medium flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#C5A059] flex-shrink-0" />
-                <span>Thank you! Your 5% first purchase voucher (GLEAM5) has been sent.</span>
+                <span>Thank you! Your 5% first purchase voucher (NOOMI5) has been sent.</span>
               </div>
             ) : (
               <form onSubmit={handleSubscribe} className="relative flex items-center pt-1">
@@ -215,7 +215,7 @@ export function Footer() {
 
         {/* Bottom Legal & Minimal Trust Cues */}
         <div className="mt-12 pt-8 border-t border-stone-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-400">
-          <p>© {new Date().getFullYear()} {storeConfig.meta.name}. Fine Everyday Jewelry. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {storeConfig.meta.name}. Wear Your Confidence. All rights reserved.</p>
           <div className="flex items-center gap-3 text-[11px] text-stone-400">
             <span>304 & 306 Grade Steel</span>
             <span className="text-stone-700">•</span>

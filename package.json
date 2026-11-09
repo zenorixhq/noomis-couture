@@ -1,7 +1,8 @@
 {
-  "name": "gleamnest-store",
+  "name": "noomis-couture",
   "version": "1.0.0",
   "private": true,
+  "description": "Noomi's Couture - Wear Your Confidence Luxury Jewelry Store",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
