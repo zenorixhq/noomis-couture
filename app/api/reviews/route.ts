@@ -136,11 +136,17 @@ async function readData() {
     if (row?.value) {
       const parsed = JSON.parse(row.value);
       const { sanitized, wasDirty } = sanitizeData(parsed);
+      if (!Array.isArray(sanitized.videoReels)) {
+        sanitized.videoReels = fileData.videoReels || [];
+      }
       if (!Array.isArray(sanitized.instagramVideos)) {
         sanitized.instagramVideos = fileData.instagramVideos || [];
       }
       if (!Array.isArray(sanitized.feedbackScreenshots)) {
         sanitized.feedbackScreenshots = fileData.feedbackScreenshots || [];
+      }
+      if (!Array.isArray(sanitized.reviews)) {
+        sanitized.reviews = fileData.reviews || [];
       }
       // If corrupted webp base64 or broken URLs were found in database, permanently clean the DB row
       if (wasDirty) {

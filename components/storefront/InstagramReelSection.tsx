@@ -184,7 +184,6 @@ export function InstagramReelSection() {
           const parsed = JSON.parse(cached);
           if (
             Array.isArray(parsed) &&
-            parsed.length > 0 &&
             !parsed.some((v: any) =>
               String(v.id || "").startsWith("fth-panel-") ||
               v.id === "insta-1" ||

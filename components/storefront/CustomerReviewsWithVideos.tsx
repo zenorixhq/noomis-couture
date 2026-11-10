@@ -187,7 +187,7 @@ export function CustomerReviewsWithVideos() {
         const cached = sessionStorage.getItem("noomis_cached_reels");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             const hasCorrupt = parsed.some(
               (v: any) =>
                 v.poster?.startsWith("data:image/webp") ||
@@ -208,7 +208,7 @@ export function CustomerReviewsWithVideos() {
         const cached = sessionStorage.getItem("noomis_cached_screenshots");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             const hasCorrupt = parsed.some(
               (s: any) =>
                 s.imageUrl?.startsWith("data:image/webp") ||
@@ -229,7 +229,7 @@ export function CustomerReviewsWithVideos() {
         const cached = sessionStorage.getItem("noomis_cached_quotes");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed)) return parsed;
         }
       } catch {}
     }
@@ -278,7 +278,7 @@ export function CustomerReviewsWithVideos() {
     fetch(`/api/reviews?t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data.videoReels) && data.videoReels.length > 0) {
+        if (Array.isArray(data.videoReels)) {
           const cleanReels = data.videoReels.map((r: any) => ({
             ...r,
             handle: (r.handle && !r.handle.toLowerCase().includes("alnaya") && !r.handle.toLowerCase().includes("gleam")) ? r.handle : "@noomi_s_couture",
@@ -305,7 +305,7 @@ export function CustomerReviewsWithVideos() {
             sessionStorage.setItem("noomis_cached_screenshots", JSON.stringify(cleanScreenshots));
           } catch {}
         }
-        if (Array.isArray(data.reviews) && data.reviews.length > 0) {
+        if (Array.isArray(data.reviews)) {
           setReviewQuotes(data.reviews);
           try {
             sessionStorage.setItem("noomis_cached_quotes", JSON.stringify(data.reviews));

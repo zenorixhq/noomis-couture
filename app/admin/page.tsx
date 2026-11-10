@@ -129,10 +129,9 @@ export default function AdminDashboardPage() {
         const cached = sessionStorage.getItem("noomis_admin_videos");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && !parsed.some((v: any) => v.poster?.startsWith("data:image/webp") || v.poster?.includes("photo-1611591475806-039775089201"))) {
+          if (Array.isArray(parsed) && !parsed.some((v: any) => v.poster?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
-          sessionStorage.removeItem("noomis_admin_videos");
         }
       } catch (e) {}
     }
@@ -147,7 +146,6 @@ export default function AdminDashboardPage() {
           if (Array.isArray(parsed) && !parsed.some((s: any) => s.imageUrl?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
-          sessionStorage.removeItem("noomis_admin_screenshots");
         }
       } catch (e) {}
     }
@@ -159,10 +157,9 @@ export default function AdminDashboardPage() {
         const cached = sessionStorage.getItem("noomis_admin_instavideos");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && !parsed.some((v: any) => v.poster?.startsWith("data:image/webp") || v.poster?.includes("photo-1611591475806-039775089201"))) {
+          if (Array.isArray(parsed) && !parsed.some((v: any) => v.poster?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
-          sessionStorage.removeItem("noomis_admin_instavideos");
         }
       } catch (e) {}
     }
@@ -877,15 +874,10 @@ export default function AdminDashboardPage() {
       } else if (file.type.startsWith("image/")) {
         setUploadProgressText(`Uploading lightweight image (${Math.round(file.size / 1024)} KB)...`);
       }
-      // 2. Convert videos to low size immediately (720p 30fps ~1.4Mbps, ~1.5 - 3MB)
-      else if ((file.type.startsWith("video/") || folder === "videos") && file.size > 2.5 * 1024 * 1024) {
-        const origSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-        setUploadProgressText(`Compressing video (original: ${origSizeMB} MB ➔ converting to fast web video)...`);
-        fileToUpload = await compressVideoIfNeeded(file, (percent, curMB, tgtMB) => {
-          setUploadProgressText(`Compressing video: ${percent}% (reducing ${curMB.toFixed(1)} MB to ~${tgtMB.toFixed(1)} MB)...`);
-        });
-        const newSizeMB = (fileToUpload.size / (1024 * 1024)).toFixed(1);
-        setUploadProgressText(`Video compressed to ${newSizeMB} MB! Uploading to cloud...`);
+      // 2. Videos: direct fast upload
+      else if (file.type.startsWith("video/") || folder === "videos") {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        setUploadProgressText(`Uploading video (${sizeMB} MB)...`);
       } else {
         setUploadProgressText(`Uploading ${fileToUpload.name}...`);
       }
@@ -950,6 +942,7 @@ export default function AdminDashboardPage() {
       }
       setIsReviewModalOpen(false);
       setReviewForm({ author: "", location: "Kerala, India", piece: "", rating: 5, quote: "" });
+      try { sessionStorage.removeItem("noomis_admin_reviews"); } catch (e) {}
       fetchReviewsAndVideos();
     } catch (err: any) {
       alert(err.message || "Error adding review");
@@ -961,8 +954,10 @@ export default function AdminDashboardPage() {
   const handleDeleteReview = async (id: string | number) => {
     if (!confirm("Are you sure you want to remove this client review?")) return;
     try {
-      // Optimistic update
-      setReviewsList((prev) => prev.filter((r) => String(r.id) !== String(id)));
+      const updated = reviewsList.filter((r) => String(r.id) !== String(id));
+      setReviewsList(updated);
+      try { sessionStorage.setItem("noomis_admin_reviews", JSON.stringify(updated)); } catch (e) {}
+
       const res = await fetch(`/api/reviews?type=review&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -986,6 +981,9 @@ export default function AdminDashboardPage() {
     }
 
     try {
+      const publicUrl = await uploadFileToServer(file, "videos");
+      setVideoForm((prev) => ({ ...prev, videoUrl: publicUrl }));
+
       // Auto-extract thumbnail poster from video if none is set
       if (!videoForm.poster) {
         generateVideoPoster(file).then(async (posterFile) => {
@@ -1001,9 +999,6 @@ export default function AdminDashboardPage() {
           }
         });
       }
-
-      const publicUrl = await uploadFileToServer(file, "videos");
-      setVideoForm((prev) => ({ ...prev, videoUrl: publicUrl }));
     } catch (err: any) {
       alert("Video Upload Notice: " + (err.message || "Upload failed") + "\n\nTip: You can also paste an Instagram Reel or direct video URL.");
     } finally {
@@ -1053,6 +1048,7 @@ export default function AdminDashboardPage() {
         productSlug: "",
         productPrice: 150,
       });
+      try { sessionStorage.removeItem("noomis_admin_videos"); } catch (e) {}
       fetchReviewsAndVideos();
     } catch (err: any) {
       alert(err.message || "Error adding video reel");
@@ -1064,7 +1060,10 @@ export default function AdminDashboardPage() {
   const handleDeleteVideo = async (id: string | number) => {
     if (!confirm("Are you sure you want to remove this video reel?")) return;
     try {
-      setVideosList((prev) => prev.filter((v) => String(v.id) !== String(id)));
+      const updated = videosList.filter((v) => String(v.id) !== String(id));
+      setVideosList(updated);
+      try { sessionStorage.setItem("noomis_admin_videos", JSON.stringify(updated)); } catch (e) {}
+
       const res = await fetch(`/api/reviews?type=video&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -1174,13 +1173,15 @@ export default function AdminDashboardPage() {
       }
 
       // Update state locally
-      setInstagramVideosList((prev) =>
-        prev.map((v) =>
+      setInstagramVideosList((prev) => {
+        const updated = prev.map((v) =>
           String(v.id) === String(videoId)
             ? { ...v, videoUrl: publicUrl, ...(autoPosterUrl ? { poster: autoPosterUrl } : {}) }
             : v
-        )
-      );
+        );
+        try { sessionStorage.setItem("noomis_admin_instavideos", JSON.stringify(updated)); } catch (e) {}
+        return updated;
+      });
 
       // Persist to DB via PUT /api/reviews
       await fetch("/api/reviews", {
@@ -1211,9 +1212,11 @@ export default function AdminDashboardPage() {
       if (!publicUrl) throw new Error("Image upload failed");
 
       // Update state locally
-      setInstagramVideosList((prev) =>
-        prev.map((v) => (String(v.id) === String(videoId) ? { ...v, poster: publicUrl } : v))
-      );
+      setInstagramVideosList((prev) => {
+        const updated = prev.map((v) => (String(v.id) === String(videoId) ? { ...v, poster: publicUrl } : v));
+        try { sessionStorage.setItem("noomis_admin_instavideos", JSON.stringify(updated)); } catch (e) {}
+        return updated;
+      });
 
       // Persist to DB via PUT /api/reviews
       const videoToUpdate = instagramVideosList.find((v) => String(v.id) === String(videoId));
@@ -1273,6 +1276,9 @@ export default function AdminDashboardPage() {
     }
 
     try {
+      const publicUrl = await uploadFileToServer(file, "videos");
+      setInstaVideoForm((prev) => ({ ...prev, videoUrl: publicUrl }));
+
       // Auto-extract thumbnail poster from video if none is set
       if (!instaVideoForm.poster) {
         generateVideoPoster(file).then(async (posterFile) => {
@@ -1288,9 +1294,6 @@ export default function AdminDashboardPage() {
           }
         });
       }
-
-      const publicUrl = await uploadFileToServer(file, "videos");
-      setInstaVideoForm((prev) => ({ ...prev, videoUrl: publicUrl }));
     } catch (err: any) {
       alert("Video Upload Notice: " + (err.message || "Upload failed") + "\n\nTip: You can also paste an Instagram Reel or direct video URL.");
     } finally {
@@ -1357,6 +1360,7 @@ export default function AdminDashboardPage() {
         poster: "",
         instagramLink: "",
       });
+      try { sessionStorage.removeItem("noomis_admin_instavideos"); } catch (e) {}
       fetchReviewsAndVideos();
     } catch (err: any) {
       alert(err.message || "Error saving Instagram video");
@@ -1368,7 +1372,10 @@ export default function AdminDashboardPage() {
   const handleDeleteInstaVideo = async (id: string | number) => {
     if (!confirm("Are you sure you want to remove this Instagram video?")) return;
     try {
-      setInstagramVideosList((prev) => prev.filter((v) => String(v.id) !== String(id)));
+      const updated = instagramVideosList.filter((v) => String(v.id) !== String(id));
+      setInstagramVideosList(updated);
+      try { sessionStorage.setItem("noomis_admin_instavideos", JSON.stringify(updated)); } catch (e) {}
+
       const res = await fetch(`/api/reviews?type=instagramVideo&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok || !data.success) {
