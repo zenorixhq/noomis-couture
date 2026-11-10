@@ -40,6 +40,10 @@ export interface StoreConfig {
     supportedCurrencies: { code: string; symbol: string; name?: string; flag?: string; rate: number }[];
     freeShippingThreshold: number;
     flatShippingFee: number;
+    shippingRates: {
+      kerala: number;
+      outsideKerala: number;
+    };
     taxRatePercent: number;
     taxInclusive: boolean;
     checkoutMode: "whatsapp" | "gateway"; // 'whatsapp' directed ordering
@@ -107,8 +111,12 @@ export const storeConfig: StoreConfig = {
     supportedCurrencies: [
       { code: "INR", symbol: "₹", name: "India (₹)", flag: "🇮🇳", rate: 1.0 },
     ],
-    freeShippingThreshold: 799,
-    flatShippingFee: 40,
+    freeShippingThreshold: 999,
+    flatShippingFee: 50,
+    shippingRates: {
+      kerala: 50,
+      outsideKerala: 70,
+    },
     taxRatePercent: 0,
     taxInclusive: true,
     checkoutMode: "gateway",

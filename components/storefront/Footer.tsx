@@ -226,7 +226,7 @@ export function Footer() {
             <span className="text-stone-700">•</span>
             <span>100% Anti-Tarnish</span>
             <span className="text-stone-700">•</span>
-            <span>Free Shipping Over ₹799</span>
+            <span>Free Shipping Over ₹999</span>
           </div>
         </div>
       </div>

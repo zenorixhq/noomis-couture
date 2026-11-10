@@ -22,7 +22,7 @@ export function AnnouncementBar() {
     "5% OFF On First Purchase with Code NOOMI5",
     "Premium 304 & 306 Grade Stainless Steel",
     `Free Pan-India Delivery Above ₹${storeConfig.commerce.freeShippingThreshold}`,
-    `Express Shipping Only ₹${storeConfig.commerce.flatShippingFee}`,
+    "Kerala Express Shipping ₹50 • Outside Kerala ₹70",
     "Hypoallergenic & Shower Safe",
     "Secure Online Payment & Instant Confirmation",
   ];

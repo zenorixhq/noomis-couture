@@ -115,7 +115,8 @@ export default function CheckoutPage() {
 
   const subtotal = useCartStore((s) => s.getSubtotal)();
   const discount = useCartStore((s) => s.getDiscountAmount)();
-  const shipping = useCartStore((s) => s.getShippingFee)();
+  const getShippingFee = useCartStore((s) => s.getShippingFee);
+  const shipping = getShippingFee(formData.state);
   const grandTotal = Math.max(0, subtotal - discount + shipping);
 
   if (!mounted) {
@@ -412,7 +413,7 @@ export default function CheckoutPage() {
                     </h3>
                   </div>
                   <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    🇮🇳 Express Shipping ₹40 • Free Above ₹799
+                    🇮🇳 Free Shipping Above ₹999 • Kerala ₹50 • Outside Kerala ₹70
                   </span>
                 </div>
 
@@ -517,7 +518,11 @@ export default function CheckoutPage() {
                     <label className="text-xs font-semibold text-stone-700">State *</label>
                     <select
                       value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, state: val });
+                        useCartStore.getState().setShippingState(val);
+                      }}
                       className="w-full px-3 py-2.5 text-xs rounded-xl bg-white border border-[#EADBBE] focus:ring-1 focus:ring-[#4A171C] outline-none"
                     >
                       {INDIAN_STATES.map((st) => (
@@ -719,9 +724,24 @@ export default function CheckoutPage() {
                   )}
 
                   <div className="flex justify-between text-stone-600">
-                    <span>Delivery Fee</span>
-                    <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span>Delivery Fee</span>
+                      {shipping > 0 && (
+                        <span className="text-[10px] text-stone-500 font-normal">
+                          ({formData.state.toLowerCase() === "kerala" ? "Kerala ₹50" : "Outside Kerala ₹70"})
+                        </span>
+                      )}
+                    </span>
+                    <span className={shipping === 0 ? "font-bold text-emerald-700" : ""}>
+                      {shipping === 0 ? "FREE" : formatPrice(shipping)}
+                    </span>
                   </div>
+
+                  {shipping > 0 && subtotal < 999 && (
+                    <div className="text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+                      Add {formatPrice(999 - subtotal)} more for <strong>FREE Shipping</strong>!
+                    </div>
+                  )}
 
                   <div className="flex justify-between text-base font-bold text-[#4A171C] pt-2 border-t border-[#EADBBE]">
                     <span>Total Amount</span>

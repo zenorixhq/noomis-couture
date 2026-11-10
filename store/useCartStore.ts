@@ -23,8 +23,10 @@ interface CartStore {
   toggleWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
 
-  // Currency & Coupon
+  // Currency & Coupon & Shipping
   setCurrency: (code: string) => void;
+  shippingState: string;
+  setShippingState: (state: string) => void;
   applyCoupon: (code: string) => { success: boolean; message: string };
   removeCoupon: () => void;
   isFirstPurchaseCustomer: (phone?: string) => boolean;
@@ -38,9 +40,9 @@ interface CartStore {
   // Computed helpers (India INR)
   getSubtotal: () => number;
   getDiscountAmount: () => number;
-  getShippingFee: () => number;
+  getShippingFee: (state?: string) => number;
   getTaxAmount: () => number;
-  getTotal: () => number;
+  getTotal: (state?: string) => number;
   getItemCount: () => number;
 }
 
@@ -50,6 +52,8 @@ export const useCartStore = create<CartStore>()(
       items: [],
       wishlist: [],
       selectedCurrency: "INR",
+      shippingState: "Kerala",
+      setShippingState: (state) => set({ shippingState: state }),
       appliedCoupon: null,
       isCartOpen: false,
       quickViewProduct: null,
@@ -281,22 +285,26 @@ export const useCartStore = create<CartStore>()(
         return 0;
       },
 
-      getShippingFee: () => {
+      getShippingFee: (state?: string) => {
         const subtotal = get().getSubtotal();
         if (subtotal === 0) return 0;
-        const threshold = storeConfig.commerce.freeShippingThreshold || 799;
+        const threshold = storeConfig.commerce.freeShippingThreshold || 999;
         if (subtotal >= threshold) return 0;
-        return storeConfig.commerce.flatShippingFee || 40;
+        const currentState = (state || get().shippingState || "Kerala").trim().toLowerCase();
+        if (currentState === "kerala") {
+          return storeConfig.commerce.shippingRates?.kerala ?? 50;
+        }
+        return storeConfig.commerce.shippingRates?.outsideKerala ?? 70;
       },
 
       getTaxAmount: () => {
         return 0; // Tax inclusive pricing
       },
 
-      getTotal: () => {
+      getTotal: (state?: string) => {
         const subtotal = get().getSubtotal();
         const discount = get().getDiscountAmount();
-        const shipping = get().getShippingFee();
+        const shipping = get().getShippingFee(state);
         return Math.max(0, subtotal - discount + shipping);
       },
 
@@ -311,6 +319,7 @@ export const useCartStore = create<CartStore>()(
         wishlist: state.wishlist,
         selectedCurrency: state.selectedCurrency,
         appliedCoupon: state.appliedCoupon,
+        shippingState: state.shippingState,
       }),
     }
   )

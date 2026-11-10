@@ -428,7 +428,7 @@ ${greetingMessage}
               <p className="text-[11px] text-muted-foreground mt-1">
                 {isQatar
                   ? "Direct Qatar Order: Complimentary VIP Delivery (Within 14 Days)"
-                  : "All taxes included. Complimentary express Pan-India shipping on orders ₹799+."}
+                  : "All taxes included. Free shipping on orders ₹999+ (Kerala ₹50 • Outside Kerala ₹70)."}
               </p>
             </div>
 

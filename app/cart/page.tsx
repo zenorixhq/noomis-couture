@@ -28,6 +28,7 @@ export default function CartPage() {
   const autoCheckAndApplyFirstPurchaseDiscount = useCartStore((s) => s.autoCheckAndApplyFirstPurchaseDiscount);
   const isFirstPurchaseCustomer = useCartStore((s) => s.isFirstPurchaseCustomer);
   const isFirstCustomer = isFirstPurchaseCustomer();
+  const shippingState = useCartStore((s) => s.shippingState);
 
   useEffect(() => {
     setMounted(true);
@@ -51,8 +52,9 @@ export default function CartPage() {
     }
 
     let ship = 0;
-    if (sub > 0 && sub < storeConfig.commerce.freeShippingThreshold) {
-      ship = storeConfig.commerce.flatShippingFee;
+    if (sub > 0 && sub < (storeConfig.commerce.freeShippingThreshold || 999)) {
+      const isKerala = (shippingState || "Kerala").trim().toLowerCase() === "kerala";
+      ship = isKerala ? (storeConfig.commerce.shippingRates?.kerala || 50) : (storeConfig.commerce.shippingRates?.outsideKerala || 70);
     }
 
     const taxableAmount = Math.max(0, sub - disc);
@@ -60,7 +62,7 @@ export default function CartPage() {
     const tot = Math.max(0, sub - disc + ship + tx);
 
     return { subtotal: sub, discount: disc, shipping: ship, tax: tx, total: tot };
-  }, [items, appliedCoupon]);
+  }, [items, appliedCoupon, shippingState]);
 
   const freeShippingThreshold = storeConfig.commerce.freeShippingThreshold;
   const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
@@ -241,9 +243,18 @@ export default function CartPage() {
                 <span className="font-semibold text-foreground">Repeat Client (Normal Rate)</span>
               </div>
             ) : null}
-            <div className="flex justify-between text-muted-foreground">
-              <span>Shipping</span>
-              <span>{shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}</span>
+            <div className="flex justify-between text-muted-foreground text-xs">
+              <span className="flex items-center gap-1">
+                <span>Shipping</span>
+                {shipping > 0 && (
+                  <span className="text-[10px] text-stone-500 font-normal">
+                    ({(shippingState || "Kerala").toLowerCase() === "kerala" ? "Kerala ₹50" : "Outside ₹70"})
+                  </span>
+                )}
+              </span>
+              <span className={shipping === 0 ? "font-bold text-emerald-700" : ""}>
+                {shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}
+              </span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Estimated Tax</span>

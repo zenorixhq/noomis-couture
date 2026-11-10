@@ -758,19 +758,19 @@ function PoliciesContent() {
                       </thead>
                       <tbody className="divide-y divide-border">
                         <tr className="hover:bg-muted/20">
-                          <td className="p-3 sm:p-4 font-semibold text-foreground">Pan-India Orders Below ₹799</td>
-                          <td className="p-3 sm:p-4 font-bold text-primary">Flat ₹40</td>
+                          <td className="p-3 sm:p-4 font-semibold text-foreground">Kerala Orders (Below ₹999)</td>
+                          <td className="p-3 sm:p-4 font-bold text-primary">₹50</td>
+                          <td className="p-3 sm:p-4 text-muted-foreground">2 – 3 Business Days</td>
+                        </tr>
+                        <tr className="hover:bg-muted/20">
+                          <td className="p-3 sm:p-4 font-semibold text-foreground">Outside Kerala / Rest of India (Below ₹999)</td>
+                          <td className="p-3 sm:p-4 font-bold text-primary">₹70</td>
                           <td className="p-3 sm:p-4 text-muted-foreground">3 – 5 Business Days</td>
                         </tr>
                         <tr className="bg-primary/5 hover:bg-primary/10">
-                          <td className="p-3 sm:p-4 font-bold text-primary">Pan-India Orders Above ₹799</td>
+                          <td className="p-3 sm:p-4 font-bold text-primary">All Orders ₹999 and Above</td>
                           <td className="p-3 sm:p-4 font-bold text-emerald-600">FREE Express Delivery</td>
-                          <td className="p-3 sm:p-4 font-semibold text-foreground">3 – 5 Business Days</td>
-                        </tr>
-                        <tr className="hover:bg-muted/20">
-                          <td className="p-3 sm:p-4 font-semibold text-foreground">Qatar (Doha & All Zones) Orders</td>
-                          <td className="p-3 sm:p-4 font-bold text-emerald-600">FREE Delivery</td>
-                          <td className="p-3 sm:p-4 text-muted-foreground">Within 14 Days</td>
+                          <td className="p-3 sm:p-4 font-semibold text-foreground">2 – 5 Business Days</td>
                         </tr>
                       </tbody>
                     </table>

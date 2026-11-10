@@ -2503,7 +2503,7 @@ export default function AdminDashboardPage() {
                   <p>
                     🇮🇳 India (INR ₹):{" "}
                     <strong className="text-foreground">
-                      Free Shipping on orders above ₹{storeConfig.commerce.freeShippingThreshold} (Flat ₹{storeConfig.commerce.flatShippingFee} below)
+                      Free Shipping on orders above ₹{storeConfig.commerce.freeShippingThreshold} (Kerala ₹50 • Outside Kerala ₹70 below)
                     </strong>
                   </p>
                   <p>Ordering Method: <strong className="text-foreground">Razorpay Instant Gateway Checkout (Cards, UPI, Netbanking)</strong></p>

@@ -30,6 +30,7 @@ export function CartDrawer() {
   const autoCheckAndApplyFirstPurchaseDiscount = useCartStore((s) => s.autoCheckAndApplyFirstPurchaseDiscount);
   const isFirstPurchaseCustomer = useCartStore((s) => s.isFirstPurchaseCustomer);
   const isFirstCustomer = isFirstPurchaseCustomer();
+  const shippingState = useCartStore((s) => s.shippingState);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -56,13 +57,14 @@ export function CartDrawer() {
     }
 
     let ship = 0;
-    if (sub > 0 && sub < storeConfig.commerce.freeShippingThreshold) {
-      ship = storeConfig.commerce.flatShippingFee;
+    if (sub > 0 && sub < (storeConfig.commerce.freeShippingThreshold || 999)) {
+      const isKerala = (shippingState || "Kerala").trim().toLowerCase() === "kerala";
+      ship = isKerala ? (storeConfig.commerce.shippingRates?.kerala || 50) : (storeConfig.commerce.shippingRates?.outsideKerala || 70);
     }
 
     const tot = Math.max(0, sub - disc + ship);
     return { subtotal: sub, discount: disc, shipping: ship, total: tot, itemCount: count };
-  }, [items, appliedCoupon]);
+  }, [items, appliedCoupon, shippingState]);
 
   const [couponCode, setCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState<{ type: "success" | "error"; text: string } | null>(
@@ -336,9 +338,18 @@ export function CartDrawer() {
                     <span className="font-semibold text-foreground">Repeat Client (Normal Rate)</span>
                   </div>
                 ) : null}
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Estimated Shipping</span>
-                  <span>{shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}</span>
+                <div className="flex justify-between text-muted-foreground text-xs">
+                  <span className="flex items-center gap-1">
+                    <span>Estimated Delivery</span>
+                    {shipping > 0 && (
+                      <span className="text-[10px] text-stone-500 font-normal">
+                        ({(shippingState || "Kerala").toLowerCase() === "kerala" ? "Kerala ₹50" : "Outside ₹70"})
+                      </span>
+                    )}
+                  </span>
+                  <span className={shipping === 0 ? "font-bold text-emerald-700" : ""}>
+                    {shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">
                   <span>Estimated Total</span>
