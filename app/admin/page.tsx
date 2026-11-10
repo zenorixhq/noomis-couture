@@ -144,7 +144,7 @@ export default function AdminDashboardPage() {
         const cached = sessionStorage.getItem("noomis_admin_screenshots");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && !parsed.some((s: any) => s.imageUrl?.startsWith("data:image/webp") || s.imageUrl?.includes("photo-1611591475806-039775089201"))) {
+          if (Array.isArray(parsed) && !parsed.some((s: any) => s.imageUrl?.includes("photo-1611591475806-039775089201"))) {
             return parsed;
           }
           sessionStorage.removeItem("noomis_admin_screenshots");
@@ -275,10 +275,8 @@ export default function AdminDashboardPage() {
         if (Array.isArray(data.feedbackScreenshots)) {
           const cleanScreenshots = data.feedbackScreenshots.map((s: any) => {
             let img = (s.imageUrl || "").trim();
-            if (img.startsWith("data:image/webp") || img.includes("photo-1611591475806-039775089201") || !img) {
-              img = (s.customerName === "Sn" || s.piece === "Earing" || s.id === "fb-1793177769534")
-                ? "/uploads/screenshots/customer-review-whatsapp-1.jpg"
-                : "/images/noomis-brand-card.png";
+            if (!img || img.includes("photo-1611591475806-039775089201")) {
+              img = "/uploads/screenshots/customer-review-whatsapp-1.jpg";
             }
             return { ...s, imageUrl: img };
           });
@@ -1126,6 +1124,7 @@ export default function AdminDashboardPage() {
         caption: "",
         date: "Verified Recent Buyer",
       });
+      try { sessionStorage.removeItem("noomis_admin_screenshots"); } catch (e) {}
       fetchReviewsAndVideos();
     } catch (err: any) {
       alert(err.message || "Error saving client feedback screenshot");
@@ -1137,7 +1136,10 @@ export default function AdminDashboardPage() {
   const handleDeleteScreenshot = async (id: string | number) => {
     if (!confirm("Are you sure you want to remove this client feedback screenshot?")) return;
     try {
-      setFeedbackScreenshotsList((prev) => prev.filter((s) => String(s.id) !== String(id)));
+      const updatedList = feedbackScreenshotsList.filter((s) => String(s.id) !== String(id));
+      setFeedbackScreenshotsList(updatedList);
+      try { sessionStorage.setItem("noomis_admin_screenshots", JSON.stringify(updatedList)); } catch (e) {}
+
       const res = await fetch(`/api/reviews?type=screenshot&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok || !data.success) {

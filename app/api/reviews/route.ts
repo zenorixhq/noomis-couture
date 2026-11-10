@@ -32,16 +32,12 @@ function sanitizeData(parsed: any) {
 
   let wasDirty = false;
 
-  // 1. Sanitize Screenshots: Eliminate any WebP canvas base64 or 404 Unsplash URLs
+  // 1. Sanitize Screenshots: Ensure valid image URLs
   parsed.feedbackScreenshots = parsed.feedbackScreenshots.map((item: any) => {
     let img = (item.imageUrl || "").trim();
-    if (img.startsWith("data:image/webp") || img.includes("photo-1611591475806-039775089201") || !img) {
+    if (!img || img.includes("photo-1611591475806-039775089201")) {
       wasDirty = true;
-      if (item.customerName === "Sn" || item.piece === "Earing" || item.id === "fb-1793177769534") {
-        img = "/uploads/screenshots/customer-review-whatsapp-1.jpg";
-      } else {
-        img = "/images/noomis-brand-card.png";
-      }
+      img = "/uploads/screenshots/customer-review-whatsapp-1.jpg";
     }
     return { ...item, imageUrl: img };
   });
@@ -140,10 +136,10 @@ async function readData() {
     if (row?.value) {
       const parsed = JSON.parse(row.value);
       const { sanitized, wasDirty } = sanitizeData(parsed);
-      if (!Array.isArray(sanitized.instagramVideos) || sanitized.instagramVideos.length === 0) {
+      if (!Array.isArray(sanitized.instagramVideos)) {
         sanitized.instagramVideos = fileData.instagramVideos || [];
       }
-      if (!Array.isArray(sanitized.feedbackScreenshots) || sanitized.feedbackScreenshots.length === 0) {
+      if (!Array.isArray(sanitized.feedbackScreenshots)) {
         sanitized.feedbackScreenshots = fileData.feedbackScreenshots || [];
       }
       // If corrupted webp base64 or broken URLs were found in database, permanently clean the DB row
@@ -198,13 +194,9 @@ async function writeData(data: any) {
   }
 }
 
-const CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
-};
-
 export async function GET() {
   const data = await readData();
-  return NextResponse.json(data, { headers: CACHE_HEADERS });
+  return NextResponse.json(data, { headers: NO_CACHE_HEADERS });
 }
 
 export async function POST(req: Request) {

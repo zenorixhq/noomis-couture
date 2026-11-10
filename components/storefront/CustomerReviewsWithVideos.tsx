@@ -292,13 +292,11 @@ export function CustomerReviewsWithVideos() {
             sessionStorage.setItem("noomis_cached_reels", JSON.stringify(cleanReels));
           } catch {}
         }
-        if (Array.isArray(data.feedbackScreenshots) && data.feedbackScreenshots.length > 0) {
+        if (Array.isArray(data.feedbackScreenshots)) {
           const cleanScreenshots = data.feedbackScreenshots.map((s: any) => {
             let img = (s.imageUrl || "").trim();
-            if (img.startsWith("data:image/webp") || img.includes("photo-1611591475806-039775089201") || !img) {
-              img = (s.customerName === "Sn" || s.piece === "Earing" || s.id === "fb-1793177769534")
-                ? "/uploads/screenshots/customer-review-whatsapp-1.jpg"
-                : "/images/noomis-brand-card.png";
+            if (!img || img.includes("photo-1611591475806-039775089201")) {
+              img = "/uploads/screenshots/customer-review-whatsapp-1.jpg";
             }
             return { ...s, imageUrl: img };
           });
