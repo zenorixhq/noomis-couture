@@ -37,13 +37,13 @@ export async function POST(req: Request) {
     const keyId =
       rawKeyId && !rawKeyId.includes("TmUYZ") && !rawKeyId.includes("Tvxxm") && !rawKeyId.includes("Tvzvx")
         ? rawKeyId
-        : "rzp_live_Tw10ncniHzIDNS";
+        : "rzp_test_TycKZW0c0TsiWj";
 
     const rawSecret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || "";
     const keySecret =
       rawSecret && !rawSecret.includes("8wuz") && !rawSecret.includes("fGBx") && !rawSecret.includes("NXHZ")
         ? rawSecret
-        : "fucsYkk2r0mCB8ZqkvF7bzKa";
+        : "Flp0kzEtfS5QZVz81uqbqoMs";
 
     if (!keyId || !keySecret) {
       return NextResponse.json(

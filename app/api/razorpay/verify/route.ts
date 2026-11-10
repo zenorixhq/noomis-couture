@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const keySecret =
       rawSecret && !rawSecret.includes("8wuz") && !rawSecret.includes("fGBx") && !rawSecret.includes("NXHZ")
         ? rawSecret
-        : "fucsYkk2r0mCB8ZqkvF7bzKa";
+        : "Flp0kzEtfS5QZVz81uqbqoMs";
 
     if (!keySecret) {
       return NextResponse.json(
