@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { categories as initialCategories } from "@/data/mockData";
 import { Category } from "@/types/store";
@@ -40,12 +40,26 @@ export default function HomePage() {
       .catch((err) => console.error("Error fetching dynamic categories:", err));
   }, []);
 
+  // Arrange categories into 2 interleaved rows so they read left-to-right naturally across columns
+  const twoRowCategories = useMemo(() => {
+    if (!Array.isArray(categoryItems) || categoryItems.length <= 1) return categoryItems;
+    const half = Math.ceil(categoryItems.length / 2);
+    const row1 = categoryItems.slice(0, half);
+    const row2 = categoryItems.slice(half);
+    const interleaved: Category[] = [];
+    for (let i = 0; i < half; i++) {
+      if (row1[i]) interleaved.push(row1[i]);
+      if (row2[i]) interleaved.push(row2[i]);
+    }
+    return interleaved;
+  }, [categoryItems]);
+
   return (
     <div className="w-full bg-[#FAF7F2] overflow-x-hidden">
       {/* 1. Hero Section (Enclosed within entire screen window, full scroll) */}
       <HeroEditorial />
 
-      {/* 2. Curated Catalog / Shop by Category (Circle Items - All Categories) */}
+      {/* 2. Curated Catalog / Shop by Category (Circle Items - 2*3 with 4th item peeked on mobile) */}
       <section id="categories" className="w-full py-10 sm:py-14 bg-[#FAF7F2] scroll-mt-20 border-b border-[#EADBBE]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
           <ScrollReveal variant="fade-up">
@@ -60,23 +74,23 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
 
-          {/* Circle Items Grid & Horizontal Carousel on Mobile (Showing All Categories) */}
+          {/* 2 * 3 Circle Items Grid with 4th Column Peek on Mobile (Showing All Categories) */}
           <div className="relative">
-            <div className="flex sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-6 md:gap-7 overflow-x-auto pb-4 pt-2 px-2 no-scrollbar scroll-smooth">
-              {categoryItems.map((cat, idx) => (
+            <div className="category-carousel-2x3 py-2 px-1">
+              {twoRowCategories.map((cat, idx) => (
                 <ScrollReveal
                   key={cat.id || cat.slug || idx}
-                  delay={idx * 30}
+                  delay={idx * 20}
                   variant="fade-up"
-                  className="flex-shrink-0"
+                  className="h-full flex justify-center"
                 >
                   <Link
                     href={`/products?category=${cat.slug}`}
-                    className="group flex flex-col items-center w-20 sm:w-24 md:w-28 text-center transition-transform hover:-translate-y-1 duration-300"
+                    className="group flex flex-col items-center w-full max-w-[96px] sm:max-w-[108px] md:max-w-[124px] text-center transition-transform hover:-translate-y-1 duration-300"
                   >
                     {/* Circle Image with Luxury Gold Gradient Ring */}
-                    <div className="relative p-[2.5px] rounded-full bg-gradient-to-tr from-[#AF8A4A] via-[#EADBBE] to-[#4A171C] group-hover:from-[#C5A059] group-hover:to-[#7A1E27] transition-all duration-300 shadow-sm group-hover:shadow-[0_8px_20px_rgba(74,23,28,0.18)]">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-white border-2 border-[#FAF7F2]">
+                    <div className="relative p-[3px] rounded-full bg-gradient-to-tr from-[#AF8A4A] via-[#EADBBE] to-[#4A171C] group-hover:from-[#C5A059] group-hover:to-[#7A1E27] transition-all duration-300 shadow-sm group-hover:shadow-[0_10px_24px_rgba(74,23,28,0.22)]">
+                      <div className="w-[82px] h-[82px] sm:w-[92px] sm:h-[92px] md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden bg-white border-2 border-[#FAF7F2]">
                         <img
                           src={cat.image}
                           alt={cat.name}
@@ -84,7 +98,7 @@ export default function HomePage() {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                         />
                       </div>
-                      {idx === 0 && (
+                      {cat.slug === "bangles" && (
                         <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#C5A059] text-white text-[8px] font-bold uppercase px-1.5 py-0.2 rounded-full shadow-sm tracking-wider pointer-events-none">
                           Hot
                         </span>
@@ -92,7 +106,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Category Label */}
-                    <span className="font-editorial text-xs sm:text-sm font-medium text-[#4A171C] group-hover:text-[#AF8A4A] transition-colors mt-2 sm:mt-2.5 leading-tight line-clamp-2 max-w-[80px] sm:max-w-[95px]">
+                    <span className="font-editorial text-[11px] sm:text-xs md:text-sm font-medium text-[#4A171C] group-hover:text-[#AF8A4A] transition-colors mt-2 sm:mt-2.5 leading-tight text-center line-clamp-2 w-full min-h-[28px] sm:min-h-[32px] flex items-center justify-center">
                       {cat.name.replace(/\s*Collection/gi, "").trim()}
                     </span>
                   </Link>

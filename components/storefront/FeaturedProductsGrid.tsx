@@ -58,16 +58,13 @@ export function FeaturedProductsGrid() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
         {/* Section Header */}
         <ScrollReveal variant="fade-up">
-          <div className="text-center space-y-2.5 max-w-2xl mx-auto">
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
             <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-[#AF8A4A] font-semibold block">
               SIGNATURE COUTURE
             </span>
             <h2 className="font-editorial text-3xl sm:text-4xl md:text-5xl font-normal tracking-tight text-[#4A171C]">
               Featured &amp; Best Sellers
             </h2>
-            <p className="text-xs sm:text-sm text-stone-600 font-light leading-relaxed">
-              Everyday waterproof luxury in surgical-grade 304 &amp; 316L stainless steel with radiant 18K gold finish.
-            </p>
             <div className="w-12 h-0.5 bg-[#C5A059] mx-auto mt-2 rounded-full" />
           </div>
         </ScrollReveal>
