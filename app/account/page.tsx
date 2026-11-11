@@ -585,8 +585,8 @@ function AccountPageContent() {
 
           <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-2">
             <span className="text-[11px] font-bold text-muted-foreground uppercase">WhatsApp Concierge Office</span>
-            <h4 className="text-sm font-bold text-foreground">Noomi&apos;s Couture Kerala Studio</h4>
-            <p className="text-xs text-muted-foreground">South Kalamassery, Ernakulam, Kerala 682033</p>
+            <h4 className="text-sm font-bold text-foreground">Noomi&apos;s Couture Concierge Office</h4>
+            <p className="text-xs text-muted-foreground">Puthanangadi, Angadippuram, Malappuram, Kerala 679321</p>
             <p className="text-xs text-muted-foreground">Phone: {storeConfig.brand.contact.phone}</p>
           </div>
         </div>

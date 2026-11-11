@@ -97,7 +97,7 @@ export const storeConfig: StoreConfig = {
       email: "concierge@noomiscouture.com",
       phone: "+91 70255 87032",
       whatsappNumber: "917025587032",
-      address: "Noomi's Couture • Pan-India & Global Express Delivery",
+      address: "Puthanangadi, Angadippuram, Malappuram, Kerala 679321",
       hours: "Mon – Sat: 9:30 AM – 8:00 PM IST",
     },
     socials: {
