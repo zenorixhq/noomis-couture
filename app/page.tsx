@@ -39,7 +39,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="w-full bg-[#FAF7F2] overflow-x-hidden">
+    <div className="w-full bg-[#FAF7F2] overflow-x-clip">
       {/* 1. Hero Section (Enclosed within entire screen window, full scroll) */}
       <HeroEditorial />
 

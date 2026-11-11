@@ -24,17 +24,16 @@
 }
 
 /* ============================================================ */
-/* NATIVE SMOOTH SCROLL & FLUID PERFORMANCE                     */
+/* NATIVE 120HZ FLUID SCROLL PERFORMANCE                        */
 /* ============================================================ */
 html {
-  scroll-behavior: smooth;
-  overflow-y: auto;
-  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  overflow-x: hidden;
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 /* High FPS Compositor Layers: Prevent scroll repaints */
@@ -42,11 +41,6 @@ body {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   backface-visibility: hidden;
-}
-
-/* Prevent image layout thrashing during scroll */
-img {
-  content-visibility: auto;
 }
 
 @layer base {
