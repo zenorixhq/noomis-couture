@@ -104,7 +104,7 @@ export function Header() {
     <>
       {/* Fixed Persistent Glass Navbar (Give navbar all times) */}
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 touch-pan-y ${
           isTransparent
             ? "bg-black/20 backdrop-blur-md border-b border-white/15 text-white shadow-[0_4px_30px_rgba(0,0,0,0.12)]"
             : "bg-[#FAF7F2]/85 backdrop-blur-xl border-b border-[#EADBBE]/80 shadow-md text-[#240A0D]"
