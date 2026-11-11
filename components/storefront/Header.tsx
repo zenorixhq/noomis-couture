@@ -105,9 +105,9 @@ export function Header() {
       >
         <AnnouncementBar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="relative flex items-center justify-between h-16 sm:h-20">
             {/* 1. LEFT SEGMENT: Navigation Links (Shop, Collections, About, Contact) on Desktop */}
-            <div className="flex items-center">
+            <div className="flex items-center z-10">
               {/* Mobile Menu Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -141,28 +141,28 @@ export function Header() {
               </nav>
             </div>
 
-            {/* 2. CENTER SEGMENT: Center-Boxed Brand Wordmark with Fine Vertical Dividers */}
-            <div
-              className={`flex items-center justify-center h-16 sm:h-20 px-5 sm:px-8 md:px-10 border-x transition-colors ${
-                isTransparent ? "border-white/20" : "border-[#EADBBE]"
-              }`}
-            >
+            {/* 2. CENTER SEGMENT: Center-Aligned Logo (Name smoothly hides on scroll, only medallion stays in center) */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-20 pointer-events-auto">
               <Link
                 href="/"
-                className="flex items-center gap-2.5 sm:gap-3 group select-none"
+                className="flex items-center group select-none transition-all duration-300"
                 aria-label="Noomi's Couture Home"
               >
                 <img
                   src="/images/noomis-medallion.png"
                   alt="Noomi's Couture Medallion"
-                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+                  className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
                 />
                 <span
-                  className={`font-editorial text-lg sm:text-2xl md:text-[1.65rem] tracking-[0.24em] uppercase font-normal transition-colors whitespace-nowrap ${
+                  className={`font-editorial tracking-[0.14em] sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-normal transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
+                    isScrolled
+                      ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
+                      : "max-w-[180px] xs:max-w-[220px] sm:max-w-[340px] opacity-100 translate-x-0 ml-1.5 sm:ml-2.5"
+                  } ${
                     isTransparent
                       ? "text-white drop-shadow-sm group-hover:text-amber-100"
                       : "text-[#4A171C] group-hover:text-[#6B1B24]"
-                  }`}
+                  } text-[11px] xs:text-xs sm:text-base md:text-xl lg:text-[1.4rem]`}
                 >
                   NOOMI&apos;S COUTURE
                 </span>
@@ -170,7 +170,7 @@ export function Header() {
             </div>
 
             {/* 3. RIGHT SEGMENT: User Account, Wishlist Heart, and Cart Pill (Count) */}
-            <div className="flex items-center gap-2 sm:gap-3.5">
+            <div className="flex items-center gap-2 sm:gap-3.5 z-10">
               {/* Currency Selector (Subtle) */}
               {storeConfig.features.enableCurrencySwitcher && (
                 <div className="relative group hidden md:flex items-center">
@@ -385,7 +385,7 @@ export function Header() {
 
               <div className="pt-3 border-t border-[#EADBBE] text-center">
                 <span className="text-[11px] font-medium text-stone-500">
-                  🇮🇳 Pan-India Express Delivery • Free Above ₹799
+                  🇮🇳 Pan-India Express Delivery • Free Above ₹999
                 </span>
               </div>
           </div>
