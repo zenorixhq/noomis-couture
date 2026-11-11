@@ -407,7 +407,7 @@ function AccountPageContent() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase">WhatsApp Concierge Office</span>
             <h4 className="text-sm font-bold text-foreground">Noomi&apos;s Couture Kerala Studio</h4>
             <p className="text-xs text-muted-foreground">South Kalamassery, Ernakulam, Kerala 682033</p>
-            <p className="text-xs text-muted-foreground">Phone: +91 96339 56222</p>
+            <p className="text-xs text-muted-foreground">Phone: {storeConfig.brand.contact.phone}</p>
           </div>
         </div>
       )}

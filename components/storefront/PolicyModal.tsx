@@ -845,7 +845,7 @@ export function PolicyModal({
         <div className="flex items-center justify-between px-5 sm:px-6 py-3 border-t border-border bg-muted/20 text-xs">
           <div className="flex items-center gap-2 text-muted-foreground">
             <MessageCircle className="w-3.5 h-3.5 text-primary" />
-            <span>Need assistance? WhatsApp +91 96339 56222</span>
+            <span>Need assistance? WhatsApp {storeConfig.brand.contact.phone}</span>
           </div>
           <button
             onClick={onClose}

@@ -6,7 +6,6 @@ import { categories as initialCategories } from "@/data/mockData";
 import { Category } from "@/types/store";
 import { HeroEditorial } from "@/components/storefront/HeroEditorial";
 import { FeaturedProductsGrid } from "@/components/storefront/FeaturedProductsGrid";
-import { BrandValueBadges } from "@/components/storefront/BrandValueBadges";
 import { CustomerReviewsWithVideos } from "@/components/storefront/CustomerReviewsWithVideos";
 import { InstagramReelSection } from "@/components/storefront/InstagramReelSection";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
@@ -101,12 +100,7 @@ export default function HomePage() {
       {/* 3. Products: Featured & Best Sellers First (3*2 Products Grid) */}
       <FeaturedProductsGrid />
 
-      {/* 4. Five Signature Brand Badges & WhatsApp Direct Contact Banner */}
-      <ScrollReveal variant="fade-up">
-        <BrandValueBadges />
-      </ScrollReveal>
-
-      {/* 5. In Their Words: Customer Feedback Screenshots & Video Reels */}
+      {/* 4. In Their Words: Customer Feedback Screenshots & Video Reels */}
       <ScrollReveal variant="fade-up">
         <CustomerReviewsWithVideos />
       </ScrollReveal>

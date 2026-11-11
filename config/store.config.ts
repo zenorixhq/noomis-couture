@@ -95,14 +95,14 @@ export const storeConfig: StoreConfig = {
     },
     contact: {
       email: "concierge@noomiscouture.com",
-      phone: "+91 96339 56222",
-      whatsappNumber: "919633956222",
+      phone: "+91 70255 87032",
+      whatsappNumber: "917025587032",
       address: "Noomi's Couture • Pan-India & Global Express Delivery",
       hours: "Mon – Sat: 9:30 AM – 8:00 PM IST",
     },
     socials: {
       instagram: "https://www.instagram.com/noomi_s_couture?cplk=eDEwdmJhdDBzZ3Q1&utm_source=qr",
-      whatsapp: "https://wa.me/919633956222",
+      whatsapp: "https://wa.me/917025587032",
       facebook: "https://www.facebook.com/noomiscouture",
     },
   },

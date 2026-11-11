@@ -74,7 +74,7 @@ export function Header() {
     { label: "Collections", href: "/#categories" },
     {
       label: "Contact",
-      href: "https://wa.me/917406322818?text=Hi%20Noomi%27s%20Couture%2C%20I%20have%20an%20inquiry",
+      href: `https://wa.me/${storeConfig.brand.contact.whatsappNumber}?text=Hi%20Noomi%27s%20Couture%2C%20I%20have%20an%20inquiry`,
       external: true,
     },
   ];
