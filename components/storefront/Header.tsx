@@ -164,18 +164,18 @@ export function Header() {
                 <img
                   src="/images/noomis-medallion.png"
                   alt="Noomi's Couture Medallion"
-                  className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
+                  className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
                 />
                 <span
-                  className={`font-editorial tracking-[0.08em] xs:tracking-[0.12em] sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-normal transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
+                  className={`font-editorial tracking-[0.1em] xs:tracking-[0.14em] sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
                     isScrolled
                       ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
-                      : "max-w-[140px] xs:max-w-[175px] sm:max-w-[340px] opacity-100 translate-x-0 ml-1.5 sm:ml-2.5"
+                      : "max-w-[200px] xs:max-w-[240px] sm:max-w-[420px] opacity-100 translate-x-0 ml-2 sm:ml-2.5"
                   } ${
                     isTransparent
                       ? "text-white drop-shadow-sm group-hover:text-amber-100"
                       : "text-[#4A171C] group-hover:text-[#6B1B24]"
-                  } text-[10px] xs:text-[11.5px] sm:text-base md:text-xl lg:text-[1.4rem]`}
+                  } text-xs xs:text-sm sm:text-lg md:text-xl lg:text-[1.65rem]`}
                 >
                   NOOMI&apos;S COUTURE
                 </span>
