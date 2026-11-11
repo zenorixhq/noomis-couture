@@ -1515,6 +1515,8 @@ export default function AdminDashboardPage() {
             return updated;
           });
         }
+        // Auto-select newly created category in product form if open
+        setFormState((prev) => ({ ...prev, category: categoryForm.slug }));
       }
       setIsCategoryModalOpen(false);
     } catch (err: any) {
@@ -2061,6 +2063,13 @@ export default function AdminDashboardPage() {
               <Plus className="w-4 h-4" />
               <span>Add New Product</span>
             </button>
+            <button
+              onClick={handleOpenAddCategory}
+              className="px-4 py-2.5 rounded-xl border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add New Category</span>
+            </button>
             <Link
               href="/"
               className="px-4 py-2.5 rounded-xl border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold flex items-center gap-1.5 transition-colors"
@@ -2091,6 +2100,18 @@ export default function AdminDashboardPage() {
           >
             <Package className="w-4 h-4" />
             <span>Product Catalog & Editing {hasLoaded ? `(${products.length})` : "(...)"}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("collections")}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+              activeTab === "collections"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-[#C5A059]" />
+            <span>Categories ({categoriesList.length})</span>
           </button>
 
           <button
@@ -2142,18 +2163,6 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("collections")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === "collections"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-[#C5A059]" />
-            <span>Curated Collections Cards ({categoriesList.length})</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab("signature")}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "signature"
@@ -2200,16 +2209,28 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
 
-              {/* Search filter in catalog */}
-              <div className="relative w-full sm:w-72">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Filter products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-muted/40 border border-border focus:ring-1 focus:ring-primary outline-none"
-                />
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleOpenAddCategory}
+                  className="px-3.5 py-1.5 rounded-lg border border-border hover:border-primary/50 text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+                  title="Add a new jewelry category"
+                >
+                  <Plus className="w-3.5 h-3.5 text-primary" />
+                  <span>Add Category</span>
+                </button>
+
+                {/* Search filter in catalog */}
+                <div className="relative w-full sm:w-72">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filter products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-muted/40 border border-border focus:ring-1 focus:ring-primary outline-none"
+                  />
+                </div>
               </div>
             </div>
 
@@ -3109,11 +3130,11 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#C5A059]" />
                   <h3 className="text-base font-bold text-foreground">
-                    Curated Collections Cards ({categoriesList.length})
+                    Store Categories & Collections ({categoriesList.length})
                   </h3>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Manage the category cards displayed on the Homepage &quot;Shop by Category&quot; section. Upload high-res jewelry photos, change titles, or edit category details.
+                  Manage all jewelry categories displayed on the Homepage and Product filters. Create new categories, upload high-res photos, or edit details.
                 </p>
               </div>
 
@@ -3124,7 +3145,7 @@ export default function AdminDashboardPage() {
                   className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-sm hover:bg-primary/90 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Collection Card</span>
+                  <span>Add New Category</span>
                 </button>
               </div>
             </div>
@@ -3820,7 +3841,18 @@ export default function AdminDashboardPage() {
               {/* Category & Stock */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-foreground">Category *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-foreground">Category *</label>
+                    <button
+                      type="button"
+                      onClick={handleOpenAddCategory}
+                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                      title="Create a new jewelry category"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>New Category</span>
+                    </button>
+                  </div>
                   <select
                     value={formState.category}
                     onChange={(e) => {
@@ -5207,7 +5239,7 @@ export default function AdminDashboardPage() {
 
       {/* Category Card Add / Edit Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsCategoryModalOpen(false)}
@@ -5217,10 +5249,10 @@ export default function AdminDashboardPage() {
             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-foreground">
-                  {editingCategory ? "Edit Curated Collection Card" : "Add New Collection Card"}
+                  {editingCategory ? "Edit Category" : "Add New Category"}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Customize the title, photo, and URL slug shown on the homepage grid.
+                  Create or edit a jewelry category for the Homepage grid, Catalog filters, and Product setup.
                 </p>
               </div>
               <button
@@ -5234,7 +5266,7 @@ export default function AdminDashboardPage() {
 
             <form onSubmit={handleSaveCategoryModal} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-foreground">Collection Name *</label>
+                <label className="text-xs font-semibold text-foreground">Category Name *</label>
                 <input
                   type="text"
                   required
@@ -5360,7 +5392,7 @@ export default function AdminDashboardPage() {
                   className="px-6 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 shadow-md disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {isSavingItem && <Clock className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isSavingItem ? "Saving..." : editingCategory ? "Update Card" : "Add Card"}</span>
+                  <span>{isSavingItem ? "Saving..." : editingCategory ? "Update Category" : "Add Category"}</span>
                 </button>
               </div>
             </form>
