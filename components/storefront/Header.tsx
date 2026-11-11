@@ -190,7 +190,7 @@ export function Header() {
             </div>
 
             {/* 3. RIGHT SEGMENT: User Account, Wishlist Heart, and Cart Pill (Count) */}
-            <div className="flex items-center gap-2 sm:gap-3.5 z-10">
+            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3.5 z-10">
               {/* Currency Selector (Subtle) */}
               {storeConfig.features.enableCurrencySwitcher && (
                 <div className="relative group hidden md:flex items-center">
@@ -239,10 +239,10 @@ export function Header() {
                 <Search className="w-4 h-4" />
               </button>
 
-              {/* Account / User Icon (Directly matching reference) */}
+              {/* Account / User Icon (Visible on Mobile & Desktop) */}
               <Link
                 href="/account"
-                className={`w-9 h-9 rounded-full hidden sm:flex items-center justify-center transition-colors ${
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${
                   isTransparent
                     ? "text-white/85 hover:text-white hover:bg-white/10"
                     : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"
@@ -256,7 +256,7 @@ export function Header() {
               {storeConfig.features.enableWishlist && (
                 <Link
                   href="/account?tab=wishlist"
-                  className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-colors ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center relative transition-colors ${
                     isTransparent
                       ? "text-white/85 hover:text-white hover:bg-white/10"
                       : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"
