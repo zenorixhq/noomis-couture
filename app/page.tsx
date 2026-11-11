@@ -75,18 +75,18 @@ export default function HomePage() {
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-3.5 sm:p-4 text-white transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-3.5 sm:p-4 md:p-5 text-white transition-opacity duration-300">
                     {idx === 0 && (
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-[#EADBBE] font-medium tracking-wider uppercase">
+                      <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+                        <span className="text-xs text-[#EADBBE] font-semibold tracking-wider uppercase drop-shadow">
                           🔥 Trending
                         </span>
-                        <span className="text-[9px] font-bold bg-[#C5A059] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        <span className="text-[10px] sm:text-xs font-bold bg-[#C5A059] text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                           Hot
                         </span>
                       </div>
                     )}
-                    <h3 className="font-editorial text-sm sm:text-base font-semibold tracking-wide text-white group-hover:text-[#F3DFB0] transition-colors leading-snug mt-0.5">
+                    <h3 className="font-editorial text-lg xs:text-xl sm:text-2xl md:text-[1.65rem] font-bold tracking-wide text-white group-hover:text-[#F3DFB0] transition-colors leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] mt-0.5">
                       {cat.name.replace(/\s*Collection/gi, "").trim()}
                     </h3>
                   </div>

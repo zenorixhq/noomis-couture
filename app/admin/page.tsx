@@ -3215,14 +3215,14 @@ export default function AdminDashboardPage() {
 
                     {/* Text Preview Overlay matching storefront */}
                     <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
-                      <p className="text-[10px] uppercase tracking-widest text-[#EADBBE] font-medium">
+                      <p className="text-[11px] uppercase tracking-widest text-[#EADBBE] font-semibold drop-shadow">
                         Collection
                       </p>
-                      <h4 className="text-sm font-bold leading-tight font-serif text-white drop-shadow">
+                      <h4 className="text-base sm:text-lg font-bold leading-tight font-serif text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                         {cat.name}
                       </h4>
                       {cat.description && (
-                        <p className="text-[10px] text-white/80 line-clamp-1 mt-0.5">
+                        <p className="text-xs text-white/90 line-clamp-1 mt-0.5 drop-shadow">
                           {cat.description}
                         </p>
                       )}
@@ -3233,10 +3233,10 @@ export default function AdminDashboardPage() {
                   <div className="p-3 bg-card border-t border-border flex flex-col gap-2 mt-auto">
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <span className="font-bold text-xs text-foreground block truncate">
+                        <span className="font-bold text-sm text-foreground block truncate">
                           {cat.name}
                         </span>
-                        <span className="text-[10px] text-muted-foreground font-mono block truncate">
+                        <span className="text-xs text-muted-foreground font-mono block truncate">
                           /{cat.slug}
                         </span>
                       </div>
