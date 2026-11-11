@@ -132,7 +132,7 @@ export default function CheckoutPage() {
       <div className="max-w-3xl mx-auto px-4 py-24 text-center space-y-4">
         <h2 className="text-2xl font-editorial font-normal text-foreground">Your shopping bag is empty</h2>
         <p className="text-xs text-muted-foreground">
-          Discover our 304 &amp; 316L stainless steel anti-tarnish jewelry collection.
+          Discover our 316L stainless steel anti-tarnish jewelry collection.
         </p>
         <Link
           href="/products"
@@ -757,7 +757,7 @@ export default function CheckoutPage() {
                   <span>The Noomi&apos;s Couture Promise</span>
                 </div>
                 <ul className="space-y-1.5 text-[11px] leading-relaxed">
-                  <li>• Handcrafted 304 &amp; 316L Stainless Steel with 18K Gold Plating</li>
+                  <li>• Handcrafted 316L Stainless Steel with 18K Gold Plating</li>
                   <li>• 100% Anti-Tarnish &amp; Waterproof Everyday Wear</li>
                   <li>• Pan-India express dispatch within 24-48 hours via DTDC / India Post</li>
                   <li>• 360° unboxing video verification for full customer protection</li>

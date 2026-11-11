@@ -273,7 +273,7 @@ export async function POST(req: Request) {
         id: `insta-${Date.now()}`,
         title: body.title || "Jewelry Styling Reel",
         handle: body.handle || "@noomi_s_couture",
-        caption: body.caption || "Everyday luxury waterproof jewelry in 304 & 306 steel",
+        caption: body.caption || "Everyday luxury waterproof jewelry in 316L steel",
         videoUrl: videoUrl,
         embedUrl: embedUrl,
         poster: body.poster || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=700",

@@ -42,7 +42,7 @@ export function Footer() {
             <BrandLogo variant="full" showTagline={true} theme="dark" />
             
             <p className="text-xs sm:text-sm text-stone-300 font-light leading-relaxed max-w-sm">
-              Fine jewellery for the skin, not the vault. Handcrafted in 304 & 306 surgical-grade stainless steel with mirror gold finish. 100% waterproof and anti-tarnish. Wear your confidence.
+              Fine jewellery for the skin, not the vault. Handcrafted in 316L surgical-grade stainless steel with mirror gold finish. 100% waterproof and anti-tarnish. Wear your confidence.
             </p>
 
             {/* Social & WhatsApp Buttons */}
@@ -138,7 +138,7 @@ export function Footer() {
                   onClick={() => setPolicyModalTab("care-guide")}
                   className="hover:text-white transition-colors text-left"
                 >
-                  Jewelry Care (304 & 306 Steel)
+                  Jewelry Care (316L Steel)
                 </button>
               </li>
               <li>
@@ -217,7 +217,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-stone-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-400">
           <p>© {new Date().getFullYear()} {storeConfig.meta.name}. Wear Your Confidence. All rights reserved.</p>
           <div className="flex items-center gap-3 text-[11px] text-stone-400">
-            <span>304 & 306 Grade Steel</span>
+            <span>316L Grade Steel</span>
             <span className="text-stone-700">•</span>
             <span>100% Anti-Tarnish</span>
             <span className="text-stone-700">•</span>

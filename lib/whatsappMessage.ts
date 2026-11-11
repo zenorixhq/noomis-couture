@@ -166,7 +166,7 @@ ${customerPhone ? `📞 Contact: +${cleanWhatsAppNumber(customerPhone)}\n` : ""}
 Your jewelry will be hand-inspected under magnification and dispatched within *24 to 48 business hours*. Tracking details will be shared the moment your parcel leaves our fulfillment center. 🚚
 
 🛡️ *OUR EVERYDAY LUXURY PROMISE*
-• *100% Waterproof & Anti-Tarnish:* Crafted in premium surgical-grade 304 & 316L stainless steel with 18K mirror gold finish. Shower, swim, and wear daily with zero fading! 💧
+• *100% Waterproof & Anti-Tarnish:* Crafted in premium surgical-grade 316L stainless steel with 18K mirror gold finish. Shower, swim, and wear daily with zero fading! 💧
 • *360° Unboxing Video:* Kindly record a continuous 360° unboxing video without cuts when opening your parcel for seamless transit guarantee. 📹
 ${options.customNote ? `\n💬 *Note from Atelier:*\n_${options.customNote}_\n` : ""}
 If you have any questions or custom requests, simply reply to this WhatsApp message!

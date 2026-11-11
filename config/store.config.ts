@@ -72,7 +72,7 @@ export const storeConfig: StoreConfig = {
   meta: {
     name: "Noomi's Couture",
     tagline: "Wear Your Confidence",
-    description: "Waterproof & Anti-Tarnish Everyday Luxury Jewellery by Noomi's Couture. Crafted in Premium 304 & 306 Grade Stainless Steel with enduring mirror gold finish. Wear your confidence daily, anywhere.",
+    description: "Waterproof & Anti-Tarnish Everyday Luxury Jewellery by Noomi's Couture. Crafted in Premium 316L Grade Stainless Steel with enduring mirror gold finish. Wear your confidence daily, anywhere.",
     url: "https://noomiscouture.com",
     favicon: "/favicon.ico",
   },

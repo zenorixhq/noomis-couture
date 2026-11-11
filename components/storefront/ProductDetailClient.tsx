@@ -638,7 +638,7 @@ ${greetingMessage}
               <div className="p-2.5 rounded-xl bg-card border border-border/80 space-y-1">
                 <ShieldCheck className="w-4 h-4 mx-auto text-primary" />
                 <p className="font-bold text-foreground">Anti-Tarnish</p>
-                <p className="text-[10px] text-muted-foreground">304 & 316L Grade</p>
+                <p className="text-[10px] text-muted-foreground">316L Grade</p>
               </div>
               <div className="p-2.5 rounded-xl bg-card border border-border/80 space-y-1">
                 <RotateCcw className="w-4 h-4 mx-auto text-primary" />

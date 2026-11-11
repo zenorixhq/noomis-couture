@@ -28,8 +28,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
   {
     id: "premium-steel",
     badge: "Surgical Grade",
-    title: "Premium 304 & 306 Steel",
-    description: "Crafted in surgical-grade 304 & 306 stainless steel with 18K real gold PVD coating for mirror brilliance.",
+    title: "Premium 316L Steel",
+    description: "Crafted in surgical-grade 316L stainless steel with 18K real gold PVD coating for mirror brilliance.",
     icon: Sparkles,
     policyTab: "care-guide",
     linkText: "View Care Guide",

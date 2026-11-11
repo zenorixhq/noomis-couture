@@ -26,7 +26,7 @@ export function BrandValueBadges() {
       ),
     },
     {
-      title: "304 & 306 Grade Steel",
+      title: "316L Grade Steel",
       desc: "Premium stainless steel indestructible core",
       icon: (
         <svg viewBox="0 0 48 48" className="w-7 h-7 text-[#C5A059]" fill="none" stroke="currentColor" strokeWidth="2">

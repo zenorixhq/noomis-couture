@@ -78,7 +78,7 @@ export function PolicyModal({
     { id: "size-guide", label: "Size Guide", icon: Ruler, badge: "Bangles & Rings" },
     { id: "return-refund", label: "Return & Refund", icon: RotateCcw, badge: "Important" },
     { id: "ordering-instructions", label: "Before Ordering", icon: AlertCircle, badge: "Must Read" },
-    { id: "care-guide", label: "Jewelry Care", icon: Sparkles, badge: "304 & 306 Steel" },
+    { id: "care-guide", label: "Jewelry Care", icon: Sparkles, badge: "316L Steel" },
     { id: "shipping", label: "Shipping Policy", icon: Truck, badge: "DTDC & India Post" },
   ];
 
@@ -664,7 +664,7 @@ export function PolicyModal({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-4">
                 <div>
                   <h4 className="text-xl font-bold text-foreground">
-                    Jewelry Care Guide (304 & 306 Grade Steel)
+                    Jewelry Care Guide (316L Grade Steel)
                   </h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     How to care for your anti-tarnish, waterproof everyday luxury pieces.
@@ -679,7 +679,7 @@ export function PolicyModal({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-4 rounded-xl bg-card border border-border text-center space-y-1">
                   <span className="text-xs font-bold text-primary uppercase">Base Material</span>
-                  <p className="text-sm font-black text-foreground">304 & 306 Stainless Steel</p>
+                  <p className="text-sm font-black text-foreground">316L Stainless Steel</p>
                   <p className="text-[11px] text-muted-foreground">Surgical grade & non-corrosive</p>
                 </div>
 
@@ -717,7 +717,7 @@ export function PolicyModal({
                     <div>
                       <strong className="text-foreground">Perfumes & Lotions:</strong>
                       <p className="text-muted-foreground mt-0.5 leading-relaxed">
-                        While 304 and 306 steel does not oxidize, harsh chemicals in perfumes or body mists can leave a dull film over high-polish gold. We recommend applying cosmetics first, allowing them to dry, then putting on your jewelry.
+                        While 316L surgical-grade steel does not oxidize, harsh chemicals in perfumes or body mists can leave a dull film over high-polish gold. We recommend applying cosmetics first, allowing them to dry, then putting on your jewelry.
                       </p>
                     </div>
                   </div>

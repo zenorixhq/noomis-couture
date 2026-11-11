@@ -5,7 +5,7 @@ export const categories: Category[] = [
     "id": "cat-bangles",
     "slug": "bangles",
     "name": "Bangles",
-    "description": "Rigid luxury bangles, open-cuff kadas, and screw-lock everyday bangles in 304 & 316L steel.",
+    "description": "Rigid luxury bangles, open-cuff kadas, and screw-lock everyday bangles in 316L steel.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/bangles-kada-1793372909246.jpg",
     "productCount": 12
   },
@@ -77,7 +77,7 @@ export const categories: Category[] = [
     "id": "cat-mangalsutra",
     "slug": "mangalsutra",
     "name": "Mangalsutra",
-    "description": "Modern minimalist mangalsutra designs in waterproof 304 steel with auspicious black beads.",
+    "description": "Modern minimalist mangalsutra designs in waterproof 316L steel with auspicious black beads.",
     "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800",
     "productCount": 0
   }

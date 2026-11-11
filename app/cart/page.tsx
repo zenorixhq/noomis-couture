@@ -89,7 +89,7 @@ export default function CartPage() {
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-foreground">Your shopping bag is empty</h1>
         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-          Explore our collection of 304 & 306 grade waterproof anti-tarnish jewelry.
+          Explore our collection of 316L grade waterproof anti-tarnish jewelry.
         </p>
         <Link
           href="/products"

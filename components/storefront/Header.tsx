@@ -374,7 +374,7 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-xs font-medium text-stone-600 hover:text-[#4A171C] py-1.5 px-2 rounded-lg hover:bg-[#F0E6D2]/40"
                 >
-                  ✨ Jewelry Care (304 &amp; 316L Steel)
+                  ✨ Jewelry Care (316L Steel)
                 </Link>
                 <Link
                   href="/policies?tab=shipping"
