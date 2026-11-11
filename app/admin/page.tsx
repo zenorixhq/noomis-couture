@@ -1528,7 +1528,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteCategory = async (catId: string) => {
-    if (!confirm("Are you sure you want to remove this category card from the homepage?")) return;
+    if (!confirm("Are you sure you want to delete this category? Products in this category will remain in the catalog.")) return;
     try {
       const res = await fetch(`/api/categories?id=${encodeURIComponent(catId)}`, {
         method: "DELETE",
@@ -1537,15 +1537,22 @@ export default function AdminDashboardPage() {
       if (Array.isArray(data.categories)) {
         setCategoriesList(data.categories);
         try { sessionStorage.setItem("noomis_categories", JSON.stringify(data.categories)); } catch (e) {}
+        if (formState.category === catId && data.categories.length > 0) {
+          setFormState((prev) => ({ ...prev, category: data.categories[0].slug }));
+        }
       } else {
         setCategoriesList((prev) => {
-          const updated = prev.filter((c) => c.id !== catId);
+          const updated = prev.filter((c) => c.id !== catId && c.slug !== catId);
           try { sessionStorage.setItem("noomis_categories", JSON.stringify(updated)); } catch (e) {}
+          if (formState.category === catId && updated.length > 0) {
+            setFormState((p) => ({ ...p, category: updated[0].slug }));
+          }
           return updated;
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting category:", err);
+      alert("Failed to delete category: " + (err?.message || "Unknown error"));
     }
   };
 
@@ -3223,42 +3230,47 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Card Actions & Info Bar */}
-                  <div className="p-3 bg-card border-t border-border flex items-center justify-between gap-2 mt-auto">
-                    <div className="min-w-0 flex-1">
-                      <span className="font-bold text-xs text-foreground block truncate">
-                        {cat.name}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-mono block truncate">
-                        /{cat.slug}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditCategory(cat)}
-                        className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        title="Edit title & description"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
+                  <div className="p-3 bg-card border-t border-border flex flex-col gap-2 mt-auto">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-xs text-foreground block truncate">
+                          {cat.name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono block truncate">
+                          /{cat.slug}
+                        </span>
+                      </div>
 
                       <Link
                         href={`/products?category=${cat.slug}`}
                         target="_blank"
-                        className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1 rounded-md border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                         title="View collection on storefront"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Link>
+                    </div>
+
+                    {/* Prominent Edit & Remove Action Buttons */}
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/50">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditCategory(cat)}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                        title="Edit category details"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
 
                       <button
                         type="button"
-                        onClick={() => handleDeleteCategory(cat.id)}
-                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 dark:border-red-900/50 dark:hover:bg-red-950/40 transition-colors"
-                        title="Remove collection card"
+                        onClick={() => handleDeleteCategory(cat.id || cat.slug)}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 dark:border-red-900/50 dark:hover:bg-red-950/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                        title="Remove this category"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove</span>
                       </button>
                     </div>
                   </div>
@@ -3843,15 +3855,34 @@ export default function AdminDashboardPage() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-foreground">Category *</label>
-                    <button
-                      type="button"
-                      onClick={handleOpenAddCategory}
-                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
-                      title="Create a new jewelry category"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>New Category</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentCat = categoriesList.find((c) => c.slug === formState.category);
+                          if (currentCat) {
+                            handleOpenEditCategory(currentCat);
+                          } else {
+                            handleOpenAddCategory();
+                          }
+                        }}
+                        className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+                        title="Edit currently selected category"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                      <span className="text-muted-foreground text-xs">•</span>
+                      <button
+                        type="button"
+                        onClick={handleOpenAddCategory}
+                        className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                        title="Create a new jewelry category"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>New</span>
+                      </button>
+                    </div>
                   </div>
                   <select
                     value={formState.category}
@@ -5377,23 +5408,41 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  disabled={isSavingItem || isUploading}
-                  className="px-4 py-2 rounded-xl border border-border text-xs font-semibold hover:bg-muted disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingItem || isUploading || !categoryForm.name}
-                  className="px-6 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 shadow-md disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isSavingItem && <Clock className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isSavingItem ? "Saving..." : editingCategory ? "Update Category" : "Add Category"}</span>
-                </button>
+              <div className="pt-4 border-t border-border flex items-center justify-between gap-3">
+                {editingCategory ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCategoryModalOpen(false);
+                      handleDeleteCategory(editingCategory.id || editingCategory.slug);
+                    }}
+                    className="px-3.5 py-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 dark:border-red-900/50 dark:bg-red-950/30 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Category</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    disabled={isSavingItem || isUploading}
+                    className="px-4 py-2 rounded-xl border border-border text-xs font-semibold hover:bg-muted disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingItem || isUploading || !categoryForm.name}
+                    className="px-6 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {isSavingItem && <Clock className="w-3.5 h-3.5 animate-spin" />}
+                    <span>{isSavingItem ? "Saving..." : editingCategory ? "Update Category" : "Add Category"}</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
