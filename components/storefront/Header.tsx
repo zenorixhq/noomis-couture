@@ -114,11 +114,11 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative flex items-center justify-between h-16 sm:h-20">
             {/* 1. LEFT SEGMENT: Navigation Links on Desktop, Hamburger + Search on Mobile */}
-            <div className="flex items-center gap-1 sm:gap-2 z-10">
+            <div className="flex items-center gap-0.5 sm:gap-2 z-10">
               {/* Mobile Menu Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className={`lg:hidden p-2 -ml-2 rounded-md transition-colors ${
+                className={`lg:hidden p-1.5 xs:p-2 -ml-1 xs:-ml-2 rounded-md transition-colors ${
                   isTransparent
                     ? "text-white hover:bg-white/10"
                     : "text-[#240A0D] hover:bg-[#F0E6D2]"
@@ -131,7 +131,7 @@ export function Header() {
               {/* Mobile Search Button (Placed beside hamburger so center logo has ample breathing room) */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className={`lg:hidden p-2 rounded-md transition-colors ${
+                className={`lg:hidden p-1.5 xs:p-2 rounded-md transition-colors ${
                   isTransparent
                     ? "text-white/85 hover:text-white hover:bg-white/10"
                     : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"
@@ -161,7 +161,7 @@ export function Header() {
               </nav>
             </div>
 
-            {/* 2. CENTER SEGMENT: Center-Aligned Logo (Name smoothly hides on scroll, only medallion stays in center) */}
+            {/* 2. CENTER SEGMENT: Center-Aligned Logo (Responsive luxury wordmark, zero overlap on mobile) */}
             <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-20 pointer-events-auto">
               <Link
                 href="/"
@@ -171,18 +171,40 @@ export function Header() {
                 <img
                   src="/images/noomis-medallion.png"
                   alt="Noomi's Couture Medallion"
-                  className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
+                  className="w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
                 />
+
+                {/* Mobile View: High-fashion stacked wordmark (prevents horizontal collision with account icon) */}
                 <span
-                  className={`font-editorial tracking-[0.1em] xs:tracking-[0.14em] sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
+                  className={`flex flex-col items-start leading-[1.05] sm:hidden transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
                     isScrolled
                       ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
-                      : "max-w-[200px] xs:max-w-[240px] sm:max-w-[420px] opacity-100 translate-x-0 ml-2 sm:ml-2.5"
+                      : "max-w-[120px] opacity-100 translate-x-0 ml-1.5 xs:ml-2"
+                  } ${
+                    isTransparent
+                      ? "text-white drop-shadow-sm"
+                      : "text-[#4A171C]"
+                  }`}
+                >
+                  <span className="font-editorial text-[10.5px] xs:text-[11.5px] font-bold tracking-[0.14em] uppercase">
+                    NOOMI&apos;S
+                  </span>
+                  <span className="font-editorial text-[7.5px] xs:text-[8px] tracking-[0.24em] uppercase text-[#C5A059] font-medium">
+                    COUTURE
+                  </span>
+                </span>
+
+                {/* Tablet & Desktop View: Single-line expansive luxury wordmark */}
+                <span
+                  className={`hidden sm:inline font-editorial sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
+                    isScrolled
+                      ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
+                      : "sm:max-w-[420px] opacity-100 translate-x-0 sm:ml-2.5"
                   } ${
                     isTransparent
                       ? "text-white drop-shadow-sm group-hover:text-amber-100"
                       : "text-[#4A171C] group-hover:text-[#6B1B24]"
-                  } text-xs xs:text-sm sm:text-lg md:text-xl lg:text-[1.65rem]`}
+                  } sm:text-lg md:text-xl lg:text-[1.65rem]`}
                 >
                   NOOMI&apos;S COUTURE
                 </span>
@@ -190,7 +212,7 @@ export function Header() {
             </div>
 
             {/* 3. RIGHT SEGMENT: User Account, Wishlist Heart, and Cart Pill (Count) */}
-            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3.5 z-10">
+            <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-3.5 z-10">
               {/* Currency Selector (Subtle) */}
               {storeConfig.features.enableCurrencySwitcher && (
                 <div className="relative group hidden md:flex items-center">
@@ -242,40 +264,40 @@ export function Header() {
               {/* Account / User Icon (Visible on Mobile & Desktop) */}
               <Link
                 href="/account"
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${
                   isTransparent
                     ? "text-white/85 hover:text-white hover:bg-white/10"
                     : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"
                 }`}
                 aria-label="My Account"
               >
-                <User className="w-4 h-4" />
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Link>
 
               {/* Wishlist Heart Icon (Directly matching reference) */}
               {storeConfig.features.enableWishlist && (
                 <Link
                   href="/account?tab=wishlist"
-                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center relative transition-colors ${
+                  className={`w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center relative transition-colors ${
                     isTransparent
                       ? "text-white/85 hover:text-white hover:bg-white/10"
                       : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"
                   }`}
                   aria-label="Wishlist"
                 >
-                  <Heart className="w-4 h-4" />
+                  <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {mounted && wishlistCount > 0 && (
-                    <span className="absolute top-0 right-0 bg-[#C5A059] text-white text-[9px] font-bold min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center shadow-sm">
+                    <span className="absolute -top-0.5 -right-0.5 bg-[#C5A059] text-white text-[8px] xs:text-[9px] font-bold min-w-[14px] xs:min-w-[16px] h-[14px] xs:h-[16px] px-0.5 rounded-full flex items-center justify-center shadow-xs">
                       {wishlistCount}
                     </span>
                   )}
                 </Link>
               )}
 
-              {/* Shopping Bag Pill with Count: [ ☖ (count) ] (Directly matching reference) */}
+              {/* Shopping Bag: Compact Icon with Badge on Mobile, Pill on Desktop */}
               <button
                 onClick={openCart}
-                className={`inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                className={`relative flex items-center justify-center w-7 h-7 xs:w-8 xs:h-8 sm:w-auto sm:inline-flex sm:items-center sm:gap-1.5 sm:px-3.5 sm:py-1.5 rounded-full border text-xs font-medium transition-all ${
                   isTransparent
                     ? "border-white/30 hover:border-white/70 bg-white/10 hover:bg-white/20 text-white shadow-sm"
                     : "border-[#4A171C]/30 hover:border-[#4A171C] bg-[#4A171C]/5 hover:bg-[#4A171C]/10 text-[#4A171C]"
@@ -283,7 +305,14 @@ export function Header() {
                 aria-label="Shopping Cart"
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold tracking-tight">
+                {/* Mobile Badge Counter */}
+                {mounted && itemCount > 0 && (
+                  <span className="sm:hidden absolute -top-1 -right-1 bg-[#4A171C] text-white text-[8px] xs:text-[9px] font-bold min-w-[14px] xs:min-w-[15px] h-[14px] xs:h-[15px] px-0.5 rounded-full flex items-center justify-center shadow-xs">
+                    {itemCount}
+                  </span>
+                )}
+                {/* Desktop Text Counter */}
+                <span className="hidden sm:inline text-[11px] font-semibold tracking-tight">
                   ({mounted ? itemCount : 0})
                 </span>
               </button>
