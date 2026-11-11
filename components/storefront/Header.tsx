@@ -106,8 +106,8 @@ export function Header() {
         <AnnouncementBar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative flex items-center justify-between h-16 sm:h-20">
-            {/* 1. LEFT SEGMENT: Navigation Links (Shop, Collections, About, Contact) on Desktop */}
-            <div className="flex items-center z-10">
+            {/* 1. LEFT SEGMENT: Navigation Links on Desktop, Hamburger + Search on Mobile */}
+            <div className="flex items-center gap-1 sm:gap-2 z-10">
               {/* Mobile Menu Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -118,7 +118,20 @@ export function Header() {
                 }`}
                 aria-label="Open menu"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+
+              {/* Mobile Search Button (Placed beside hamburger so center logo has ample breathing room) */}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className={`lg:hidden p-2 rounded-md transition-colors ${
+                  isTransparent
+                    ? "text-white/85 hover:text-white hover:bg-white/10"
+                    : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"
+                }`}
+                aria-label="Search products"
+              >
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
               {/* Desktop Left Nav Links */}
@@ -154,15 +167,15 @@ export function Header() {
                   className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
                 />
                 <span
-                  className={`font-editorial tracking-[0.14em] sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-normal transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
+                  className={`font-editorial tracking-[0.08em] xs:tracking-[0.12em] sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-normal transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
                     isScrolled
                       ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
-                      : "max-w-[180px] xs:max-w-[220px] sm:max-w-[340px] opacity-100 translate-x-0 ml-1.5 sm:ml-2.5"
+                      : "max-w-[140px] xs:max-w-[175px] sm:max-w-[340px] opacity-100 translate-x-0 ml-1.5 sm:ml-2.5"
                   } ${
                     isTransparent
                       ? "text-white drop-shadow-sm group-hover:text-amber-100"
                       : "text-[#4A171C] group-hover:text-[#6B1B24]"
-                  } text-[11px] xs:text-xs sm:text-base md:text-xl lg:text-[1.4rem]`}
+                  } text-[10px] xs:text-[11.5px] sm:text-base md:text-xl lg:text-[1.4rem]`}
                 >
                   NOOMI&apos;S COUTURE
                 </span>
@@ -206,10 +219,10 @@ export function Header() {
                 </div>
               )}
 
-              {/* Search Trigger Icon */}
+              {/* Desktop Search Trigger Icon */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-9 h-9 rounded-full hidden lg:flex items-center justify-center transition-colors ${
                   isTransparent
                     ? "text-white/85 hover:text-white hover:bg-white/10"
                     : "text-[#240A0D]/80 hover:text-[#4A171C] hover:bg-[#F0E6D2]"

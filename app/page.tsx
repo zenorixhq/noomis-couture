@@ -10,7 +10,6 @@ import { BrandValueBadges } from "@/components/storefront/BrandValueBadges";
 import { CustomerReviewsWithVideos } from "@/components/storefront/CustomerReviewsWithVideos";
 import { InstagramReelSection } from "@/components/storefront/InstagramReelSection";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
-import { ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   const [categoryItems, setCategoryItems] = useState<Category[]>(() => {
@@ -60,11 +59,11 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
-            {categoryItems.slice(0, 6).map((cat, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+            {categoryItems.map((cat, idx) => (
               <ScrollReveal
                 key={cat.id}
-                delay={idx * 45}
+                delay={idx * 40}
                 variant="fade-up"
                 className="h-full"
               >
@@ -95,17 +94,6 @@ export default function HomePage() {
                 </Link>
               </ScrollReveal>
             ))}
-          </div>
-
-          {/* View All Categories CTA Button */}
-          <div className="text-center pt-2 sm:pt-4">
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#4A171C] text-[#FAF5EB] hover:bg-[#381014] hover:shadow-lg font-semibold text-xs tracking-widest uppercase transition-all shadow-sm group border border-[#D4AF37]/30"
-            >
-              <span>View All Categories</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-[#D4AF37]" />
-            </Link>
           </div>
         </div>
       </section>
