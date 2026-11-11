@@ -70,6 +70,21 @@ function SuccessContent() {
     } catch (e) {}
   }, [orderNumber, paymentId, cleanedTotal, phone, method, isOnlinePayment]);
 
+  const [copiedMsg, setCopiedMsg] = useState(false);
+
+  // Auto-fetch confirmed order from Neon PostgreSQL database to guarantee complete details
+  useEffect(() => {
+    if (!orderNumber) return;
+    fetch(`/api/orders?orderNumber=${encodeURIComponent(orderNumber)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setOrderDetails(data[0]);
+        }
+      })
+      .catch(() => {});
+  }, [orderNumber]);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(orderNumber);
@@ -78,25 +93,74 @@ function SuccessContent() {
     } catch (err) {}
   };
 
-  const custName = orderDetails?.customer?.fullName || "Valued Patron";
-  const itemsText = orderDetails?.items?.length
-    ? orderDetails.items.map((it: any) => `• ${it.quantity}x ${it.title} (₹${it.price})`).join("\n")
-    : "";
-  const addressText = orderDetails?.customer?.address
-    ? `${orderDetails.customer.address.street || ""}, ${orderDetails.customer.address.city || ""}, ${orderDetails.customer.address.state || ""} - ${orderDetails.customer.address.postalCode || ""}`
+  const custName =
+    orderDetails?.customer?.fullName ||
+    orderDetails?.customerName ||
+    "Valued Patron";
+
+  const customerPhone =
+    phone ||
+    orderDetails?.customer?.phone ||
+    orderDetails?.customerPhone ||
+    "";
+
+  const itemsList = orderDetails?.items?.length
+    ? orderDetails.items
+        .map(
+          (it: any) =>
+            `• *${it.quantity}x* ${it.title}${
+              it.selectedVariant
+                ? ` (${Object.values(it.selectedVariant.options || {}).join(", ")})`
+                : ""
+            } — ₹${it.price * it.quantity}`
+        )
+        .join("\n")
     : "";
 
-  let whatsappMessage = `✨ *Noomi's Couture - Order Confirmation* ✨\n\n`;
-  whatsappMessage += `*Order Reference:* #${orderNumber}\n`;
-  whatsappMessage += `*Amount Paid:* ${displayTotal} (Razorpay Verified)\n`;
-  if (paymentId) whatsappMessage += `*Payment ID:* ${paymentId}\n`;
-  whatsappMessage += `*Customer:* ${custName}\n`;
-  if (phone || orderDetails?.customer?.phone) whatsappMessage += `*Phone:* ${phone || orderDetails?.customer?.phone}\n`;
-  if (addressText) whatsappMessage += `*Delivery Address:* ${addressText}\n`;
-  if (itemsText) whatsappMessage += `\n*Items Ordered:*\n${itemsText}\n`;
-  whatsappMessage += `\nHi Noomi's Couture! I have confirmed and paid for this order on your website. Please share packing video & dispatch tracking details. Thank you! ✨`;
+  const addressText =
+    orderDetails?.customer?.address?.street
+      ? `${orderDetails.customer.address.street}, ${orderDetails.customer.address.city}, ${orderDetails.customer.address.state} - ${orderDetails.customer.address.postalCode}`
+      : orderDetails?.shippingAddress || "";
 
-  const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+  let whatsappMessage = `━━━━━━━━━━━━━━━━━━━━━\n`;
+  whatsappMessage += `✨ *N O O M I ' S   C O U T U R E* ✨\n`;
+  whatsappMessage += `_Official Order Confirmation & Priority Dispatch_\n`;
+  whatsappMessage += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  whatsappMessage += `👑 *ORDER REFERENCE:* #${orderNumber}\n`;
+  whatsappMessage += `💳 *PAYMENT:* Paid & Verified (Razorpay)\n`;
+  whatsappMessage += `💰 *TOTAL AMOUNT:* ${displayTotal}\n`;
+  if (paymentId) {
+    whatsappMessage += `🔖 *TRANSACTION ID:* ${paymentId}\n`;
+  }
+  whatsappMessage += `\n👤 *CUSTOMER DETAILS:*\n`;
+  whatsappMessage += `• *Name:* ${custName}\n`;
+  if (customerPhone) {
+    whatsappMessage += `• *Phone:* ${customerPhone}\n`;
+  }
+  if (addressText) {
+    whatsappMessage += `• *Deliver To:* ${addressText}\n`;
+  }
+  if (itemsList) {
+    whatsappMessage += `\n💍 *ITEMS ORDERED:*\n${itemsList}\n`;
+  }
+  whatsappMessage += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+  whatsappMessage += `💬 *MESSAGE TO CONCIERGE:*\n`;
+  whatsappMessage += `"Hello Noomi's Couture team! I have completed and paid for this order on your website. Please share packing video & dispatch tracking details once ready. Thank you! 💖"\n`;
+  whatsappMessage += `━━━━━━━━━━━━━━━━━━━━━`;
+
+  const encodedMsg = encodeURIComponent(whatsappMessage);
+  const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedMsg}`;
+  const whatsappMobileUrl = `https://wa.me/${whatsappPhone}?text=${encodedMsg}`;
+
+  const handleCopyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      setCopiedMsg(true);
+      setTimeout(() => setCopiedMsg(false), 2200);
+    } catch (e) {}
+  };
+
+  const accountUrl = `/account?query=${encodeURIComponent(customerPhone || orderNumber)}`;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-8 font-sans">
@@ -162,37 +226,81 @@ function SuccessContent() {
           </div>
         )}
 
-        {/* 1. DEDICATED PROMINENT WHATSAPP CONFIRMATION SECTION */}
-        <div className="bg-gradient-to-br from-[#E8F8F0] via-emerald-50 to-[#FAF7F2] border-2 border-[#25D366]/50 rounded-2xl p-5 sm:p-6 text-center space-y-3.5 shadow-sm">
-          <div className="flex items-center justify-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#25D366]" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-800">
-              Instant Order Confirmation
-            </span>
-          </div>
+        {/* 1. DEDICATED BEAUTIFIED WHATSAPP CONFIRMATION SECTION (DESKTOP & MOBILE) */}
+        <div className="bg-[#FAF8F5] border-2 border-[#25D366]/40 rounded-2xl overflow-hidden shadow-sm">
+          {/* WhatsApp Brand Header */}
+          <div className="bg-[#075E54] text-white px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold shadow-xs">
+                <MessageCircle className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold tracking-wide leading-tight">
+                  Noomi&apos;s Couture Concierge
+                </p>
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Online • Instant Packaging Desk</span>
+                </div>
+              </div>
+            </div>
 
-          <div>
-            <h3 className="font-editorial text-xl sm:text-2xl font-normal text-[#1C1917]">
-              Confirm Your Order on WhatsApp
-            </h3>
-            <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto mt-1 leading-relaxed">
-              Tap below to send your order receipt directly to our concierge on WhatsApp for priority packaging, personal care, and immediate dispatch updates.
-            </p>
-          </div>
-
-          <div className="pt-1">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-sm tracking-wide transition-all shadow-[0_8px_20px_rgba(37,211,102,0.35)] hover:shadow-[0_12px_28px_rgba(37,211,102,0.5)] active:scale-95 group"
+            <button
+              type="button"
+              onClick={handleCopyMessage}
+              className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-semibold flex items-center gap-1 text-emerald-100 transition-colors"
+              title="Copy message text"
             >
-              <MessageCircle className="w-5 h-5 fill-current shrink-0 group-hover:scale-110 transition-transform" />
-              <span>Confirm Order on WhatsApp</span>
-            </a>
+              {copiedMsg ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedMsg ? "Copied!" : "Copy Receipt"}</span>
+            </button>
+          </div>
+
+          {/* WhatsApp Chat Preview Canvas (Authentic Chat Bubble) */}
+          <div className="p-4 sm:p-6 bg-[#EFEAE2] space-y-4">
+            <div className="max-w-xl mx-auto">
+              <div className="bg-[#DCF8C6] border border-[#C5E1A5] rounded-2xl p-4 sm:p-5 shadow-xs text-[#1C1917] space-y-3 relative">
+                <div className="text-[11px] sm:text-xs font-mono whitespace-pre-wrap leading-relaxed text-stone-800">
+                  {whatsappMessage}
+                </div>
+
+                <div className="flex items-center justify-end gap-1 text-[10px] text-stone-500 pt-1 border-t border-emerald-700/10">
+                  <span>Just now</span>
+                  <span className="text-[#34B7F1] font-bold">✓✓</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop & Mobile Action Buttons */}
+            <div className="max-w-xl mx-auto pt-2 space-y-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Desktop: WhatsApp Web button */}
+                <a
+                  href={whatsappWebUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-[0_4px_16px_rgba(37,211,102,0.35)] hover:shadow-[0_6px_20px_rgba(37,211,102,0.5)] active:scale-98 flex items-center justify-center gap-2 group"
+                >
+                  <MessageCircle className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
+                  <span>Send on WhatsApp Web</span>
+                </a>
+
+                {/* Mobile / Direct App button */}
+                <a
+                  href={whatsappMobileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-[#128C7E] hover:bg-[#075E54] text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-sm active:scale-98 flex items-center justify-center gap-2 group"
+                >
+                  <MessageCircle className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
+                  <span>Open in WhatsApp App</span>
+                </a>
+              </div>
+
+              <p className="text-[11px] text-center text-stone-500">
+                Tap above to notify our packing concierge directly with your receipt for priority dispatch.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -213,7 +321,7 @@ function SuccessContent() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
           <Link
-            href="/account"
+            href={accountUrl}
             className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#4A171C] hover:bg-[#380F13] text-[#FAF5EB] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md border border-[#D4AF37]/30"
           >
             <span>Track Order in My Account</span>
@@ -232,7 +340,7 @@ function SuccessContent() {
         <div className="pt-4 border-t border-[#EADBBE] flex items-center justify-between text-xs text-stone-500">
           <span>Need custom assistance or sizing help?</span>
           <a
-            href={whatsappUrl}
+            href={whatsappMobileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[#128C7E] font-bold hover:underline"

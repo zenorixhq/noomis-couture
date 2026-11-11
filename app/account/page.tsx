@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { sampleOrders } from "@/data/mockData";
 import { useCartStore } from "@/store/useCartStore";
 import { useProductStore } from "@/store/useProductStore";
 import { formatPrice } from "@/lib/utils";
@@ -19,6 +18,12 @@ import {
   Clock,
   Truck,
   MessageCircle,
+  Search,
+  RefreshCw,
+  Copy,
+  Check,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
 
 function AccountPageContent() {
@@ -27,6 +32,12 @@ function AccountPageContent() {
 
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [placedOrders, setPlacedOrders] = useState<any[]>([]);
+  const [dbOrders, setDbOrders] = useState<any[]>([]);
+  const [lookupInput, setLookupInput] = useState<string>("");
+  const [activeIdentifier, setActiveIdentifier] = useState<string>("");
+  const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+
   const [customerName, setCustomerName] = useState<string>("Valued Patron");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
@@ -38,7 +49,7 @@ function AccountPageContent() {
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const [hasLoadedProducts, setHasLoadedProducts] = useState(false);
 
-  const whatsappPhone = storeConfig.brand.contact.whatsappNumber || "919633956222";
+  const whatsappPhone = storeConfig.brand.contact.whatsappNumber || "917025587032";
 
   useEffect(() => {
     fetchProducts().finally(() => {
@@ -51,34 +62,105 @@ function AccountPageContent() {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
 
+  // Real-time lookup from Neon PostgreSQL database by Phone, Email, or Order #
+  const fetchCustomerOrders = async (queryTerm: string) => {
+    const cleanTerm = queryTerm.trim();
+    if (!cleanTerm) return;
+
+    setIsLoadingOrders(true);
+    setHasSearched(true);
+    setActiveIdentifier(cleanTerm);
+
+    try {
+      const res = await fetch(`/api/orders?query=${encodeURIComponent(cleanTerm)}`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setDbOrders(data);
+        if (data.length > 0) {
+          const first = data[0];
+          const name = first.customer?.fullName || first.customerName;
+          if (name && name !== "Valued Customer") {
+            setCustomerName(name);
+          }
+          const phone = first.customer?.phone || first.customerPhone;
+          if (phone) {
+            setCustomerPhone(phone);
+            try {
+              localStorage.setItem("noomis_customer_phone", phone);
+            } catch (e) {}
+          }
+          const email = first.customer?.email || first.customerEmail;
+          if (email) {
+            setCustomerEmail(email);
+            try {
+              localStorage.setItem("noomis_customer_email", email);
+            } catch (e) {}
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Order lookup error:", err);
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  // On mount: check URL query or localStorage to automatically load orders on mobile or desktop
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // 1. Check URL parameters (e.g. redirect from /checkout/success)
+    const paramQuery =
+      searchParams.get("query") ||
+      searchParams.get("phone") ||
+      searchParams.get("email") ||
+      searchParams.get("orderNumber");
+
+    if (paramQuery) {
+      setLookupInput(paramQuery);
+      fetchCustomerOrders(paramQuery);
+      return;
+    }
+
+    // 2. Otherwise auto-load previously used Phone / Email from localStorage on this device
     try {
+      const savedPhone = localStorage.getItem("noomis_customer_phone");
+      const savedEmail = localStorage.getItem("noomis_customer_email");
+      const profileStr = localStorage.getItem("noomis_customer_profile");
+
+      let identifier = savedPhone || savedEmail || "";
+      if (!identifier && profileStr) {
+        const prof = JSON.parse(profileStr);
+        identifier = prof.phone || prof.email || "";
+      }
+
+      // Check saved local orders as fallback cache
       const savedOrdersStr = localStorage.getItem("noomis_placed_orders");
       if (savedOrdersStr) {
         const parsed = JSON.parse(savedOrdersStr);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setPlacedOrders(parsed);
-          const latestCust = parsed[0]?.customer;
-          if (latestCust?.fullName && latestCust.fullName !== "Valued Patron") {
-            setCustomerName(latestCust.fullName);
+          if (!identifier && parsed[0]?.customer?.phone) {
+            identifier = parsed[0].customer.phone;
           }
-          if (latestCust?.phone) setCustomerPhone(latestCust.phone);
-          if (latestCust?.email) setCustomerEmail(latestCust.email);
         }
       }
 
-      const profileStr = localStorage.getItem("noomis_customer_profile");
-      if (profileStr) {
-        const prof = JSON.parse(profileStr);
-        if (prof.fullName) setCustomerName(prof.fullName);
-        if (prof.phone) setCustomerPhone(prof.phone);
-        if (prof.email) setCustomerEmail(prof.email);
+      if (identifier) {
+        setLookupInput(identifier);
+        fetchCustomerOrders(identifier);
       }
     } catch (e) {}
-  }, []);
+  }, [searchParams]);
 
-  const allOrders = [...placedOrders, ...sampleOrders];
+  // Final list of orders: server database records take highest precedence
+  const allOrders = useMemo(() => {
+    if (dbOrders.length > 0) return dbOrders;
+    if (hasSearched) return [];
+    if (placedOrders.length > 0) return placedOrders;
+    return [];
+  }, [dbOrders, hasSearched, placedOrders]);
 
   const isWishlisted = (p: (typeof products)[0]) => {
     const pId = (p.id || "").toLowerCase().trim();
@@ -138,23 +220,29 @@ function AccountPageContent() {
   const createWhatsAppOrderUrl = (order: any) => {
     const isPaid = order.paymentStatus === "paid" || !!order.razorpayPaymentId || !!order.paymentId;
     const itemsList = order.items?.length
-      ? order.items.map((it: any) => `• ${it.quantity}x ${it.title} (₹${it.price})`).join("\n")
+      ? order.items.map((it: any) => `• *${it.quantity}x* ${it.title} (₹${it.price})`).join("\n")
       : "";
     
-    let msg = `✨ *Noomi's Couture - Order Confirmation & Inquiry* ✨\n\n`;
-    msg += `*Order Reference:* #${order.orderNumber}\n`;
-    msg += `*Total Amount:* ₹${order.grandTotal}\n`;
-    msg += `*Payment Status:* ${isPaid ? "Paid (Razorpay Verified)" : "Pending / COD"}\n`;
+    let msg = `━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `👑 *N O O M I ' S   C O U T U R E*\n`;
+    msg += `_Order Tracking & Concierge Inquiry_\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    msg += `✨ *ORDER REFERENCE:* #${order.orderNumber}\n`;
+    msg += `💰 *TOTAL AMOUNT:* ₹${order.grandTotal}\n`;
+    msg += `💳 *PAYMENT:* ${isPaid ? "Paid & Verified (Razorpay)" : "Pending"}\n`;
     if (order.razorpayPaymentId || order.paymentId) {
-      msg += `*Payment ID:* ${order.razorpayPaymentId || order.paymentId}\n`;
+      msg += `🔖 *TRANSACTION ID:* ${order.razorpayPaymentId || order.paymentId}\n`;
     }
     if (order.trackingNumber) {
-      msg += `*Tracking Code:* ${order.trackingNumber}\n`;
+      msg += `📦 *TRACKING CODE:* ${order.trackingNumber}\n`;
     }
     if (itemsList) {
-      msg += `\n*Items Ordered:*\n${itemsList}\n`;
+      msg += `\n💍 *ITEMS ORDERED:*\n${itemsList}\n`;
     }
-    msg += `\nHi Noomi's Couture Concierge! I would like to confirm my order #${order.orderNumber} and check dispatch tracking details. Thank you! ✨`;
+    msg += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `💬 *MESSAGE TO CONCIERGE:*\n`;
+    msg += `"Hello Noomi's Couture team! I am inquiring about my order #${order.orderNumber}. Could you please provide dispatch tracking details? Thank you! 💖"\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━`;
 
     return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(msg)}`;
   };
@@ -165,7 +253,7 @@ function AccountPageContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-            Customer Account
+            Customer Account &amp; Orders
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Welcome back, <strong className="text-foreground">{customerName}</strong>
@@ -217,21 +305,111 @@ function AccountPageContent() {
       {/* Tab 1: Orders */}
       {activeTab === "orders" && (
         <div className="space-y-6">
+          {/* Real-Time Order Lookup Bar (Instant Multi-Device Sync) */}
+          <div className="bg-[#FAF8F5] border border-[#EADBBE] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-[#4A171C] flex items-center gap-2">
+                  <Package className="w-4 h-4 text-[#C5A059]" />
+                  <span>Look Up Your Orders &amp; Shipments</span>
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Enter your mobile number or email to sync and view all orders placed on desktop, mobile, or tablet.
+                </p>
+              </div>
+
+              {activeIdentifier && (
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <span className="text-[11px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Active: {activeIdentifier}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (lookupInput.trim()) {
+                  fetchCustomerOrders(lookupInput.trim());
+                }
+              }}
+              className="flex flex-col sm:flex-row gap-2.5 pt-1"
+            >
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder="Enter 10-digit Phone Number or Email (e.g. 6238920442)"
+                  value={lookupInput}
+                  onChange={(e) => setLookupInput(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-white rounded-xl border border-[#EADBBE] focus:outline-none focus:ring-1 focus:ring-[#4A171C] text-stone-900 shadow-xs placeholder:text-stone-400"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoadingOrders || !lookupInput.trim()}
+                className="px-6 py-2.5 rounded-xl bg-[#4A171C] hover:bg-[#380F13] text-[#FAF5EB] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 shrink-0"
+              >
+                {isLoadingOrders ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Searching...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Find My Orders</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Multiple Orders Header Announcement */}
+          {allOrders.length > 0 && (
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-semibold text-stone-600">
+                Found <strong>{allOrders.length} order{allOrders.length > 1 ? "s" : ""}</strong> associated with your account
+              </span>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                Latest first
+              </span>
+            </div>
+          )}
+
           {allOrders.length === 0 ? (
-            <div className="py-20 text-center rounded-2xl border border-dashed border-border p-8 space-y-4">
-              <div className="w-12 h-12 rounded-full bg-muted mx-auto flex items-center justify-center text-muted-foreground">
+            <div className="py-16 text-center rounded-2xl border border-dashed border-[#EADBBE] bg-[#FFFDF9] p-8 space-y-4">
+              <div className="w-12 h-12 rounded-full bg-stone-100 mx-auto flex items-center justify-center text-stone-400">
                 <Package className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-foreground">No orders placed yet</h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Explore our everyday waterproof luxury jewelry and place your first order today.
+              <h3 className="text-base font-bold text-foreground">
+                {hasSearched ? `No orders found for "${activeIdentifier}"` : "No orders loaded yet"}
+              </h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                {hasSearched
+                  ? "Please verify your 10-digit mobile number or email address, or contact our WhatsApp concierge for immediate support."
+                  : "Enter your mobile number or email in the box above to look up and track your orders."}
               </p>
-              <Link
-                href="/products"
-                className="inline-block px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
-              >
-                Browse Catalog
-              </Link>
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/products"
+                  className="inline-block px-5 py-2.5 rounded-xl bg-[#4A171C] text-[#FAF5EB] text-xs font-semibold hover:bg-[#380F13] transition-colors"
+                >
+                  Browse Jewelry Catalog
+                </Link>
+                <a
+                  href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent("Hi Noomi's Couture! I would like help tracking my order.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#25D366] text-[#128C7E] text-xs font-bold hover:bg-emerald-50 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 fill-[#25D366] text-[#25D366]" />
+                  <span>Chat with Concierge</span>
+                </a>
+              </div>
             </div>
           ) : (
             allOrders.map((order) => {
@@ -298,13 +476,15 @@ function AccountPageContent() {
                     </div>
                   )}
 
-                  {/* Delivery Address Preview if saved */}
-                  {order.customer?.address && (
+                  {/* Delivery Address Preview */}
+                  {(order.customer?.address || order.shippingAddress) && (
                     <div className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border/50">
                       <span className="font-semibold text-foreground block mb-0.5">Delivery Address:</span>
                       <span>
-                        {order.customer.fullName && `${order.customer.fullName}, `}
-                        {order.customer.address.street}, {order.customer.address.city}, {order.customer.address.state} - {order.customer.address.postalCode}
+                        {(order.customer?.fullName || order.customerName) && `${order.customer?.fullName || order.customerName}, `}
+                        {order.customer?.address?.street
+                          ? `${order.customer.address.street}, ${order.customer.address.city}, ${order.customer.address.state} - ${order.customer.address.postalCode}`
+                          : order.shippingAddress || "Direct Delivery"}
                       </span>
                     </div>
                   )}

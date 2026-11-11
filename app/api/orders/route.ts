@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const phone = searchParams.get("phone");
-    if (phone) {
+
+    // 1. First-purchase discount check
+    if (searchParams.get("checkFirstPurchase") === "true") {
+      const phone = searchParams.get("phone") || searchParams.get("query") || "";
       const cleanPhone = phone.replace(/[^0-9]/g, "");
       if (cleanPhone.length >= 7) {
         const existingOrder = await prisma.order.findFirst({
@@ -23,7 +25,43 @@ export async function GET(req: Request) {
       return NextResponse.json({ isFirstPurchase: true });
     }
 
+    // 2. Customer Lookup by Phone / Email / Order # across all devices
+    const query = (
+      searchParams.get("query") ||
+      searchParams.get("search") ||
+      searchParams.get("phone") ||
+      searchParams.get("email") ||
+      searchParams.get("orderNumber") ||
+      ""
+    ).trim();
+
+    let whereClause: any = undefined;
+
+    if (query) {
+      const cleanPhone = query.replace(/[^0-9]/g, "");
+      const cleanOrderNum = query.replace(/^#/, "").trim();
+      const whereConditions: any[] = [];
+
+      if (cleanPhone.length >= 7) {
+        whereConditions.push({ customerPhone: { contains: cleanPhone.slice(-8) } });
+      }
+      if (query.includes("@")) {
+        whereConditions.push({ customerEmail: { equals: query, mode: "insensitive" } });
+      }
+      if (cleanOrderNum.length >= 3) {
+        whereConditions.push({ orderNumber: { contains: cleanOrderNum, mode: "insensitive" } });
+      }
+      if (whereConditions.length === 0 && query.length >= 2) {
+        whereConditions.push({ customerName: { contains: query, mode: "insensitive" } });
+      }
+
+      if (whereConditions.length > 0) {
+        whereClause = { OR: whereConditions };
+      }
+    }
+
     const dbOrders = await prisma.order.findMany({
+      where: whereClause,
       orderBy: { createdAt: "desc" },
     });
 
