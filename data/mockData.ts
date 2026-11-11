@@ -104,7 +104,7 @@ export const products: Product[] = [
     "reviewCount": 0,
     "inStock": true,
     "stockCount": 1,
-    "featured": false,
+    "featured": true,
     "isNewArrival": true,
     "isBestSeller": false,
     "variantAttributes": [
@@ -174,7 +174,7 @@ export const products: Product[] = [
     "reviewCount": 0,
     "inStock": true,
     "stockCount": 1,
-    "featured": false,
+    "featured": true,
     "isNewArrival": true,
     "isBestSeller": false,
     "variantAttributes": [
@@ -209,7 +209,7 @@ export const products: Product[] = [
     "reviewCount": 0,
     "inStock": true,
     "stockCount": 1,
-    "featured": false,
+    "featured": true,
     "isNewArrival": true,
     "isBestSeller": false,
     "variantAttributes": [
@@ -244,7 +244,7 @@ export const products: Product[] = [
     "reviewCount": 0,
     "inStock": true,
     "stockCount": 1,
-    "featured": false,
+    "featured": true,
     "isNewArrival": true,
     "isBestSeller": false,
     "variantAttributes": [
@@ -374,7 +374,7 @@ export const products: Product[] = [
     "reviewCount": 0,
     "inStock": true,
     "stockCount": 5,
-    "featured": false,
+    "featured": true,
     "isNewArrival": true,
     "isBestSeller": true,
     "variantAttributes": [
@@ -413,7 +413,7 @@ export const products: Product[] = [
     "reviewCount": 0,
     "inStock": true,
     "stockCount": 1,
-    "featured": false,
+    "featured": true,
     "isNewArrival": true,
     "isBestSeller": true,
     "variantAttributes": [
