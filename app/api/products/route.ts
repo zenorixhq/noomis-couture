@@ -8,6 +8,8 @@ import {
 } from "@/lib/productCache";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const runtime = "nodejs";
 
 function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
   if (!val) return fallback;
@@ -18,7 +20,11 @@ function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
   }
 }
 
-function formatProduct(p: any) {
+function formatProduct(p: any, signatureSet?: Set<string>) {
+  const isSignature = signatureSet
+    ? signatureSet.has(p.id) || signatureSet.has(p.slug)
+    : !!p.featured;
+
   return {
     id: p.id,
     slug: p.slug,
@@ -41,13 +47,18 @@ function formatProduct(p: any) {
     featured: p.featured,
     isNewArrival: p.isNewArrival,
     isBestSeller: p.isBestSeller,
+    inSignatureCouture: isSignature,
     variantAttributes: safeJsonParse(p.variantJson, undefined),
     specifications: safeJsonParse(p.specsJson, undefined),
+    createdAt: p.createdAt ? (typeof p.createdAt === "string" ? p.createdAt : p.createdAt.toISOString()) : undefined,
+    updatedAt: p.updatedAt ? (typeof p.updatedAt === "string" ? p.updatedAt : p.updatedAt.toISOString()) : undefined,
   };
 }
 
-const CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
 };
 
 export async function GET(req: Request) {
@@ -59,26 +70,46 @@ export async function GET(req: Request) {
     if (!forceFresh) {
       const memoryHit = getCachedProducts();
       if (memoryHit && memoryHit.length > 0) {
-        return NextResponse.json(memoryHit, { headers: CACHE_HEADERS });
+        return NextResponse.json(memoryHit, { headers: NO_CACHE_HEADERS });
       }
     }
 
-    // 2. Query Neon PostgreSQL database
-    const dbProducts = await prisma.product.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    // 2. Query Neon PostgreSQL database & Signature Couture selection in parallel
+    const [dbProducts, signatureRow] = await Promise.all([
+      prisma.product.findMany({
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.siteContent
+        .findUnique({
+          where: { key: "signature_couture_product_ids" },
+        })
+        .catch(() => null),
+    ]);
+
+    let signatureSet = new Set<string>();
+    if (signatureRow?.value) {
+      try {
+        const parsed = JSON.parse(signatureRow.value);
+        if (Array.isArray(parsed)) {
+          signatureSet = new Set(parsed);
+        }
+      } catch (e) {}
+    }
 
     if (dbProducts.length === 0) {
-      return NextResponse.json(fallbackProducts, { headers: CACHE_HEADERS });
+      return NextResponse.json(
+        fallbackProducts.map((p) => formatProduct(p, signatureSet)),
+        { headers: NO_CACHE_HEADERS }
+      );
     }
 
     // Format DB products into application Product interface
-    const formatted = dbProducts.map(formatProduct);
+    const formatted = dbProducts.map((p) => formatProduct(p, signatureSet));
     setCachedProducts(formatted);
-    return NextResponse.json(formatted, { headers: CACHE_HEADERS });
+    return NextResponse.json(formatted, { headers: NO_CACHE_HEADERS });
   } catch (err) {
     console.error("GET /api/products error:", err);
-    return NextResponse.json(fallbackProducts, { headers: CACHE_HEADERS });
+    return NextResponse.json(fallbackProducts, { headers: NO_CACHE_HEADERS });
   }
 }
 
@@ -114,14 +145,14 @@ export async function POST(req: Request) {
         salePriceQatar: body.salePriceQatar !== undefined && body.salePriceQatar !== "" && body.salePriceQatar !== null
           ? parseFloat(body.salePriceQatar)
           : null,
-        category: body.category || "necklaces",
+        category: body.category || "necklaces-and-chains",
         tags: JSON.stringify(Array.isArray(body.tags) ? body.tags : [body.category || "jewelry", "New"]),
         images: JSON.stringify(imageUrls),
         rating: 5.0,
         reviewCount: 0,
         inStock: body.inStock !== false,
         stockCount: parseInt(body.stockCount) || 10,
-        featured: !!body.featured,
+        featured: !!body.featured || !!body.inSignatureCouture,
         isNewArrival: true,
         isBestSeller: !!body.isBestSeller,
         variantJson: body.variantAttributes ? JSON.stringify(body.variantAttributes) : null,
@@ -129,13 +160,33 @@ export async function POST(req: Request) {
       },
     });
 
+    // If marked for Signature Couture, update signature_couture_product_ids
+    if (body.inSignatureCouture) {
+      try {
+        const sigRow = await prisma.siteContent.findUnique({
+          where: { key: "signature_couture_product_ids" },
+        });
+        const currentIds: string[] = sigRow?.value ? JSON.parse(sigRow.value) : [];
+        if (!currentIds.includes(newProduct.id)) {
+          const updatedIds = [newProduct.id, ...currentIds];
+          await prisma.siteContent.upsert({
+            where: { key: "signature_couture_product_ids" },
+            update: { value: JSON.stringify(updatedIds) },
+            create: { key: "signature_couture_product_ids", value: JSON.stringify(updatedIds) },
+          });
+        }
+      } catch (sigErr) {
+        console.warn("Failed to update signature couture selection:", sigErr);
+      }
+    }
+
     invalidateProductsCache();
-    return NextResponse.json(formatProduct(newProduct), { status: 201 });
+    return NextResponse.json(formatProduct(newProduct), { status: 201, headers: NO_CACHE_HEADERS });
   } catch (err: any) {
     console.error("POST /api/products error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to create product" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }

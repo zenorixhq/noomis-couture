@@ -48,6 +48,9 @@ import {
   Sparkles,
   Cloud,
   Loader2,
+  ArrowUp,
+  ArrowDown,
+  Check,
 } from "lucide-react";
 import { upload } from "@vercel/blob/client";
 import { WhatsAppConfirmationModal } from "@/components/admin/WhatsAppConfirmationModal";
@@ -80,9 +83,15 @@ export default function AdminDashboardPage() {
   const addProduct = useProductStore((s) => s.addProduct);
   const updateProduct = useProductStore((s) => s.updateProduct);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
+  const signatureCoutureIds = useProductStore((s) => s.signatureCoutureIds);
+  const fetchSignatureCouture = useProductStore((s) => s.fetchSignatureCouture);
+  const setSignatureCoutureIds = useProductStore((s) => s.setSignatureCoutureIds);
+  const toggleSignatureCoutureProduct = useProductStore((s) => s.toggleSignatureCoutureProduct);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "inventory" | "config" | "reviews" | "collections" | "reels">("inventory");
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "inventory" | "config" | "reviews" | "collections" | "reels" | "signature">("inventory");
   const [searchQuery, setSearchQuery] = useState("");
+  const [signatureSearchQuery, setSignatureSearchQuery] = useState("");
+  const [isUpdatingSignature, setIsUpdatingSignature] = useState(false);
   const [isMigratingBlob, setIsMigratingBlob] = useState(false);
   const [migrationMessage, setMigrationMessage] = useState<string | null>(null);
 
@@ -229,6 +238,7 @@ export default function AdminDashboardPage() {
     featured: boolean;
     isBestSeller: boolean;
     isNewArrival: boolean;
+    inSignatureCouture: boolean;
     sizingType: "adjustable" | "sizes";
     selectedSizes: string[];
     sizeStock: Record<string, number>;
@@ -245,6 +255,7 @@ export default function AdminDashboardPage() {
     featured: false,
     isBestSeller: false,
     isNewArrival: true,
+    inSignatureCouture: false,
     sizingType: "adjustable",
     selectedSizes: [...RING_SPECIFIC_SIZES],
     sizeStock: {},
@@ -355,7 +366,8 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchProducts();
+      fetchProducts(true);
+      fetchSignatureCouture();
       fetchReviewsAndVideos();
       fetchCategories();
 
@@ -369,7 +381,7 @@ export default function AdminDashboardPage() {
         })
         .catch((err) => console.error("Error fetching orders:", err));
     }
-  }, [isAuthenticated, fetchProducts]);
+  }, [isAuthenticated, fetchProducts, fetchSignatureCouture]);
 
   // Calculate high-level KPIs
   const totalRevenue = orders.reduce((sum, o) => sum + (o?.grandTotal || 0), 0);
@@ -1565,6 +1577,7 @@ export default function AdminDashboardPage() {
       featured: false,
       isBestSeller: false,
       isNewArrival: true,
+      inSignatureCouture: false,
       sizingType: "adjustable",
       selectedSizes: initialRingSizes,
       sizeStock: initialSizeStock,
@@ -1643,6 +1656,8 @@ export default function AdminDashboardPage() {
       ? product.images.filter((img) => Boolean(img && typeof img === "string" && img.trim()))
       : (product as any).imageUrl ? [(product as any).imageUrl] : [];
 
+    const isCurrentlySignature = signatureCoutureIds.includes(product.id) || Boolean(product.inSignatureCouture);
+
     setFormState({
       title: product.title,
       category: normalizedCategory,
@@ -1656,6 +1671,7 @@ export default function AdminDashboardPage() {
       featured: !!product.featured,
       isBestSeller: !!product.isBestSeller,
       isNewArrival: !!product.isNewArrival,
+      inSignatureCouture: isCurrentlySignature,
       sizingType: detectedSizingType,
       selectedSizes,
       sizeStock,
@@ -1865,11 +1881,20 @@ export default function AdminDashboardPage() {
           featured: formState.featured,
           isBestSeller: formState.isBestSeller,
           isNewArrival: formState.isNewArrival,
+          inSignatureCouture: formState.inSignatureCouture,
           variantAttributes,
         });
+
+        // Sync with signature couture list
+        const isInList = signatureCoutureIds.includes(editingProduct.id);
+        if (formState.inSignatureCouture && !isInList) {
+          await setSignatureCoutureIds([...signatureCoutureIds, editingProduct.id]);
+        } else if (!formState.inSignatureCouture && isInList) {
+          await setSignatureCoutureIds(signatureCoutureIds.filter((id) => id !== editingProduct.id));
+        }
       } else {
         // Create new product in DB and Store
-        await addProduct({
+        const created = await addProduct({
           title: formState.title,
           category: formState.category,
           price: parsedPriceInr,
@@ -1884,8 +1909,13 @@ export default function AdminDashboardPage() {
           featured: formState.featured,
           isBestSeller: formState.isBestSeller,
           isNewArrival: formState.isNewArrival,
+          inSignatureCouture: formState.inSignatureCouture,
           variantAttributes,
         });
+
+        if (created && formState.inSignatureCouture) {
+          await setSignatureCoutureIds([...signatureCoutureIds, created.id]);
+        }
       }
       setIsModalOpen(false);
     } catch (err: any) {
@@ -2124,6 +2154,18 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab("signature")}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+              activeTab === "signature"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Star className="w-4 h-4 text-[#C5A059]" />
+            <span>Signature Couture ({signatureCoutureIds.length})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("reels")}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "reels"
@@ -2247,7 +2289,7 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="py-3">
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1 flex-wrap items-center">
                           {product.featured && (
                             <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">
                               Featured
@@ -2258,10 +2300,41 @@ export default function AdminDashboardPage() {
                               Best Seller
                             </span>
                           )}
+                          {(signatureCoutureIds.includes(product.id) || product.inSignatureCouture) && (
+                            <span className="text-[10px] bg-[#C5A059]/20 text-[#8F7234] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#C5A059]/40">
+                              <Star className="w-2.5 h-2.5 fill-[#C5A059] text-[#C5A059]" />
+                              Signature
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await toggleSignatureCoutureProduct(product.id);
+                            }}
+                            className={`px-2 py-1.5 rounded-md text-[11px] font-semibold border transition-colors flex items-center gap-1 ${
+                              signatureCoutureIds.includes(product.id) || product.inSignatureCouture
+                                ? "bg-[#C5A059]/20 border-[#C5A059] text-[#8F7234] hover:bg-[#C5A059]/30"
+                                : "bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                            }`}
+                            title="Toggle Homepage Signature Couture showcase"
+                          >
+                            <Star
+                              className={`w-3 h-3 ${
+                                signatureCoutureIds.includes(product.id) || product.inSignatureCouture
+                                  ? "fill-[#C5A059] text-[#C5A059]"
+                                  : ""
+                              }`}
+                            />
+                            <span>
+                              {signatureCoutureIds.includes(product.id) || product.inSignatureCouture
+                                ? "In Signature"
+                                : "+ Signature"}
+                            </span>
+                          </button>
                           <button
                             onClick={() => openEditModal(product)}
                             className="p-1.5 rounded-md hover:bg-muted text-foreground flex items-center gap-1 font-semibold text-xs border border-border hover:border-primary transition-colors"
@@ -3415,6 +3488,293 @@ export default function AdminDashboardPage() {
             )}
           </div>
         )}
+
+        {/* Tab: Signature Couture Curator */}
+        {activeTab === "signature" && (
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 fill-[#C5A059] text-[#C5A059]" />
+                  <h3 className="text-base font-bold text-foreground">
+                    Signature Couture Homepage Showcase ({signatureCoutureIds.length} pieces selected)
+                  </h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Curate the exact products highlighted on the homepage in the &quot;Signature Couture: Featured &amp; Best Sellers&quot; section. Reorder items using the arrows to adjust display priority (the first 6 appear on the 3&times;2 grid).
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#C5A059]/15 text-[#8F7234] border border-[#C5A059]/40">
+                  {signatureCoutureIds.length >= 6
+                    ? `✓ ${signatureCoutureIds.length} / 6 slots filled`
+                    : `${signatureCoutureIds.length} / 6 slots selected (${6 - signatureCoutureIds.length} backfilled)`}
+                </span>
+              </div>
+            </div>
+
+            {/* Currently Selected Products (Order matters) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Active Showcase Queue (In Homepage Display Order)
+                </h4>
+                {signatureCoutureIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (confirm("Clear all selected items from Signature Couture?")) {
+                        setIsUpdatingSignature(true);
+                        await setSignatureCoutureIds([]);
+                        setIsUpdatingSignature(false);
+                      }
+                    }}
+                    className="text-[11px] text-destructive hover:underline font-semibold"
+                  >
+                    Clear Showcase
+                  </button>
+                )}
+              </div>
+
+              {signatureCoutureIds.length === 0 ? (
+                <div className="py-12 text-center space-y-2 bg-muted/10 rounded-2xl border border-dashed border-border p-6">
+                  <Star className="w-8 h-8 text-[#C5A059] mx-auto opacity-40" />
+                  <p className="text-xs font-bold text-foreground">No specific pieces selected yet</p>
+                  <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
+                    The homepage is currently displaying top-ranked Featured &amp; Best Seller items by default. Choose pieces from the catalog below or toggle &quot;+ Signature&quot; in the Inventory tab to handpick your showcase!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {signatureCoutureIds.map((id, index) => {
+                    const prod = products.find((p) => p.id === id || p.slug === id);
+                    if (!prod) {
+                      return (
+                        <div
+                          key={id}
+                          className="p-3 rounded-xl border border-border bg-muted/20 flex items-center justify-between text-xs text-muted-foreground"
+                        >
+                          <span className="font-mono text-[11px]">Unknown item ({id})</span>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setIsUpdatingSignature(true);
+                              await setSignatureCoutureIds(signatureCoutureIds.filter((x) => x !== id));
+                              setIsUpdatingSignature(false);
+                            }}
+                            className="text-destructive font-bold text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={prod.id}
+                        className={`p-3.5 rounded-xl border flex flex-col justify-between transition-all bg-card shadow-xs ${
+                          index < 6
+                            ? "border-[#C5A059]/60 ring-1 ring-[#C5A059]/20"
+                            : "border-border opacity-75"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="relative shrink-0">
+                            <img
+                              src={prod.images?.[0] || "/images/noomis-brand-card.png"}
+                              alt=""
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
+                              }}
+                              className="w-14 h-16 object-cover rounded-lg border border-border bg-stone-100"
+                            />
+                            <span
+                              className={`absolute -top-1.5 -left-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-xs ${
+                                index < 6
+                                  ? "bg-[#C5A059] text-white"
+                                  : "bg-muted-foreground text-white"
+                              }`}
+                            >
+                              #{index + 1}
+                            </span>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] uppercase font-bold text-[#8F7234] block">
+                              {index < 6 ? `Slot ${index + 1} (Homepage Grid)` : `Backfill Queue #${index + 1}`}
+                            </span>
+                            <h5 className="text-xs font-bold text-foreground truncate mt-0.5">
+                              {prod.title}
+                            </h5>
+                            <p className="text-[11px] text-muted-foreground capitalize">
+                              {prod.category} &bull; {formatPrice(prod.salePrice || prod.price, "INR")}
+                            </p>
+                            <span
+                              className={`inline-block mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                                prod.stockCount > 0 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {prod.stockCount > 0 ? `${prod.stockCount} in stock` : "Sold Out"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Controls: Reorder Up / Down & Remove */}
+                        <div className="flex items-center justify-between gap-1 pt-3 mt-3 border-t border-border/60">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={index === 0 || isUpdatingSignature}
+                              onClick={async () => {
+                                if (index === 0) return;
+                                const updated = [...signatureCoutureIds];
+                                const [moved] = updated.splice(index, 1);
+                                updated.splice(index - 1, 0, moved);
+                                setIsUpdatingSignature(true);
+                                await setSignatureCoutureIds(updated);
+                                setIsUpdatingSignature(false);
+                              }}
+                              title="Move forward in showcase"
+                              className="p-1 rounded bg-muted/60 hover:bg-muted text-foreground border border-border disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === signatureCoutureIds.length - 1 || isUpdatingSignature}
+                              onClick={async () => {
+                                if (index === signatureCoutureIds.length - 1) return;
+                                const updated = [...signatureCoutureIds];
+                                const [moved] = updated.splice(index, 1);
+                                updated.splice(index + 1, 0, moved);
+                                setIsUpdatingSignature(true);
+                                await setSignatureCoutureIds(updated);
+                                setIsUpdatingSignature(false);
+                              }}
+                              title="Move backward in showcase"
+                              className="p-1 rounded bg-muted/60 hover:bg-muted text-foreground border border-border disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={isUpdatingSignature}
+                            onClick={async () => {
+                              setIsUpdatingSignature(true);
+                              await setSignatureCoutureIds(signatureCoutureIds.filter((x) => x !== prod.id));
+                              setIsUpdatingSignature(false);
+                            }}
+                            className="px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded border border-transparent hover:border-destructive/30 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Add from Catalog Section */}
+            <div className="pt-6 border-t border-border/80 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Add Items from Live Catalog
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Click &quot;+ Add to Showcase&quot; to append any piece to your homepage Signature Couture section.
+                  </p>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search catalog to add..."
+                    value={signatureSearchQuery}
+                    onChange={(e) => setSignatureSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-muted/40 border border-border focus:ring-1 focus:ring-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[460px] overflow-y-auto p-1">
+                {products
+                  .filter(
+                    (p) =>
+                      p.title.toLowerCase().includes(signatureSearchQuery.toLowerCase()) ||
+                      p.category.toLowerCase().includes(signatureSearchQuery.toLowerCase())
+                  )
+                  .map((product) => {
+                    const isSelected = signatureCoutureIds.includes(product.id);
+                    return (
+                      <div
+                        key={product.id}
+                        className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
+                          isSelected
+                            ? "bg-[#C5A059]/10 border-[#C5A059]/50"
+                            : "bg-card border-border hover:border-border/80"
+                        }`}
+                      >
+                        <img
+                          src={product.images?.[0] || "/images/noomis-brand-card.png"}
+                          alt=""
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/images/noomis-brand-card.png";
+                          }}
+                          className="w-10 h-12 object-cover rounded-md border border-border bg-stone-100 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h6 className="text-xs font-bold text-foreground truncate">{product.title}</h6>
+                          <span className="text-[10px] text-muted-foreground capitalize block truncate">
+                            {product.category} &bull; {formatPrice(product.salePrice || product.price, "INR")}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={isUpdatingSignature}
+                            onClick={async () => {
+                              setIsUpdatingSignature(true);
+                              if (isSelected) {
+                                await setSignatureCoutureIds(
+                                  signatureCoutureIds.filter((x) => x !== product.id)
+                                );
+                              } else {
+                                await setSignatureCoutureIds([...signatureCoutureIds, product.id]);
+                              }
+                              setIsUpdatingSignature(false);
+                            }}
+                            className={`mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold border transition-colors flex items-center gap-1 ${
+                              isSelected
+                                ? "bg-[#C5A059] text-white border-[#C5A059] hover:bg-[#C5A059]/90"
+                                : "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
+                            }`}
+                          >
+                            {isSelected ? (
+                              <>
+                                <Check className="w-2.5 h-2.5" />
+                                <span>In Showcase</span>
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="w-2.5 h-2.5" />
+                                <span>+ Add to Showcase</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Product Add / Edit Modal */}
@@ -4020,7 +4380,7 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Toggles */}
-              <div className="flex gap-4 pt-2 border-t border-border">
+              <div className="flex flex-wrap gap-4 pt-2 border-t border-border">
                 <label className="flex items-center gap-2 text-xs cursor-pointer">
                   <input
                     type="checkbox"
@@ -4038,6 +4398,18 @@ export default function AdminDashboardPage() {
                     className="accent-primary rounded"
                   />
                   <span>Mark Best Seller</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formState.inSignatureCouture}
+                    onChange={(e) => setFormState({ ...formState, inSignatureCouture: e.target.checked })}
+                    className="accent-primary rounded"
+                  />
+                  <span className="font-semibold text-[#8F7234] flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-[#C5A059] text-[#C5A059]" />
+                    Show in Signature Couture (Homepage Showcase)
+                  </span>
                 </label>
               </div>
 

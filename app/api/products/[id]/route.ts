@@ -3,6 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { invalidateProductsCache } from "@/lib/productCache";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const runtime = "nodejs";
+
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+};
 
 function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
   if (!val) return fallback;
@@ -13,7 +21,7 @@ function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
   }
 }
 
-function formatProduct(p: any) {
+function formatProduct(p: any, isSignature = false) {
   return {
     id: p.id,
     slug: p.slug,
@@ -36,8 +44,11 @@ function formatProduct(p: any) {
     featured: p.featured,
     isNewArrival: p.isNewArrival,
     isBestSeller: p.isBestSeller,
+    inSignatureCouture: isSignature || !!p.featured,
     variantAttributes: safeJsonParse(p.variantJson, undefined),
     specifications: safeJsonParse(p.specsJson, undefined),
+    createdAt: p.createdAt ? (typeof p.createdAt === "string" ? p.createdAt : p.createdAt.toISOString()) : undefined,
+    updatedAt: p.updatedAt ? (typeof p.updatedAt === "string" ? p.updatedAt : p.updatedAt.toISOString()) : undefined,
   };
 }
 
@@ -46,22 +57,39 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const product = await prisma.product.findFirst({
-      where: {
-        OR: [{ id: params.id }, { slug: params.id }],
-      },
-    });
+    const [product, sigRow] = await Promise.all([
+      prisma.product.findFirst({
+        where: {
+          OR: [{ id: params.id }, { slug: params.id }],
+        },
+      }),
+      prisma.siteContent
+        .findUnique({
+          where: { key: "signature_couture_product_ids" },
+        })
+        .catch(() => null),
+    ]);
 
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: "Product not found" }, { status: 404, headers: NO_CACHE_HEADERS });
     }
 
-    return NextResponse.json(formatProduct(product));
+    let isSig = !!product.featured;
+    if (sigRow?.value) {
+      try {
+        const parsed = JSON.parse(sigRow.value);
+        if (Array.isArray(parsed)) {
+          isSig = parsed.includes(product.id) || parsed.includes(product.slug);
+        }
+      } catch (e) {}
+    }
+
+    return NextResponse.json(formatProduct(product, isSig), { headers: NO_CACHE_HEADERS });
   } catch (err: any) {
     console.error("GET /api/products/[id] error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to fetch product" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
@@ -105,13 +133,38 @@ export async function PUT(
       },
     });
 
+    // Update Signature Couture list if specified
+    if (body.inSignatureCouture !== undefined) {
+      try {
+        const sigRow = await prisma.siteContent.findUnique({
+          where: { key: "signature_couture_product_ids" },
+        });
+        const currentIds: string[] = sigRow?.value ? JSON.parse(sigRow.value) : [];
+        let updatedIds = currentIds;
+        if (body.inSignatureCouture) {
+          if (!currentIds.includes(params.id)) {
+            updatedIds = [...currentIds, params.id];
+          }
+        } else {
+          updatedIds = currentIds.filter((id) => id !== params.id);
+        }
+        await prisma.siteContent.upsert({
+          where: { key: "signature_couture_product_ids" },
+          update: { value: JSON.stringify(updatedIds) },
+          create: { key: "signature_couture_product_ids", value: JSON.stringify(updatedIds) },
+        });
+      } catch (sigErr) {
+        console.warn("Failed to update signature couture selection in PUT:", sigErr);
+      }
+    }
+
     invalidateProductsCache();
-    return NextResponse.json(formatProduct(updated));
+    return NextResponse.json(formatProduct(updated, !!body.inSignatureCouture), { headers: NO_CACHE_HEADERS });
   } catch (err: any) {
     console.error("PUT /api/products/[id] error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to update product" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
@@ -124,13 +177,29 @@ export async function DELETE(
     await prisma.product.delete({
       where: { id: params.id },
     });
+
+    // Remove from signature couture if present
+    try {
+      const sigRow = await prisma.siteContent.findUnique({
+        where: { key: "signature_couture_product_ids" },
+      });
+      if (sigRow?.value) {
+        const currentIds: string[] = JSON.parse(sigRow.value);
+        const filtered = currentIds.filter((id) => id !== params.id);
+        await prisma.siteContent.update({
+          where: { key: "signature_couture_product_ids" },
+          data: { value: JSON.stringify(filtered) },
+        });
+      }
+    } catch (e) {}
+
     invalidateProductsCache();
-    return NextResponse.json({ success: true, message: "Product deleted" });
+    return NextResponse.json({ success: true, message: "Product deleted" }, { headers: NO_CACHE_HEADERS });
   } catch (err: any) {
     console.error("DELETE /api/products/[id] error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to delete product" },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }

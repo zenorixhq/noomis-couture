@@ -2,25 +2,17 @@ import { create } from "zustand";
 import { Product } from "@/types/store";
 import { products as fallbackProducts } from "@/data/mockData";
 
-const STORAGE_KEY = "noomis_catalog_live_v8";
+const STORAGE_KEY = "noomis_catalog_live_v9";
 
 // Auto-purge obsolete and legacy catalog cache keys from previous versions
 if (typeof window !== "undefined") {
   try {
-    localStorage.removeItem("noomis_products_catalog");
-    localStorage.removeItem("noomis_products_catalog_v2");
-    localStorage.removeItem("noomis_products_catalog_v3");
-    localStorage.removeItem("noomis_catalog_live_v4");
-    localStorage.removeItem("noomis_catalog_live_v5");
-    localStorage.removeItem("noomis_catalog_live_v6");
-    localStorage.removeItem("noomis_catalog_live_v7");
-    sessionStorage.removeItem("noomis_products_catalog");
-    sessionStorage.removeItem("noomis_products_catalog_v2");
-    sessionStorage.removeItem("noomis_products_catalog_v3");
-    sessionStorage.removeItem("noomis_catalog_live_v4");
-    sessionStorage.removeItem("noomis_catalog_live_v5");
-    sessionStorage.removeItem("noomis_catalog_live_v6");
-    sessionStorage.removeItem("noomis_catalog_live_v7");
+    for (let i = 1; i <= 8; i++) {
+      localStorage.removeItem(`noomis_catalog_live_v${i}`);
+      sessionStorage.removeItem(`noomis_catalog_live_v${i}`);
+      localStorage.removeItem(`noomis_products_catalog_v${i}`);
+      sessionStorage.removeItem(`noomis_products_catalog_v${i}`);
+    }
   } catch (e) {}
 }
 
@@ -31,7 +23,6 @@ function getInitialProducts(): { products: Product[]; hasLoaded: boolean } {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Verify cache does NOT contain stale template products
           const isStale = parsed.some(
             (p: any) =>
               p.slug === "imperial-emerald-cuban-pendant" ||
@@ -46,11 +37,9 @@ function getInitialProducts(): { products: Product[]; hasLoaded: boolean } {
           sessionStorage.removeItem(STORAGE_KEY);
         }
       }
-    } catch (e) {
-      // Ignore if storage error
-    }
+    } catch (e) {}
   }
-  return { products: fallbackProducts, hasLoaded: true };
+  return { products: fallbackProducts, hasLoaded: false };
 }
 
 function persistProducts(prods: Product[]) {
@@ -64,12 +53,16 @@ function persistProducts(prods: Product[]) {
 
 interface ProductStore {
   products: Product[];
+  signatureCoutureIds: string[];
   isLoading: boolean;
   hasLoaded: boolean;
   error: string | null;
 
   // Actions
   fetchProducts: (forceFresh?: boolean) => Promise<void>;
+  fetchSignatureCouture: () => Promise<string[]>;
+  setSignatureCoutureIds: (ids: string[]) => Promise<boolean>;
+  toggleSignatureCoutureProduct: (productId: string) => Promise<boolean>;
   addProduct: (productData: any) => Promise<Product | null>;
   updateProduct: (id: string, updateData: any) => Promise<Product | null>;
   deleteProduct: (id: string) => Promise<boolean>;
@@ -80,19 +73,21 @@ const initial = getInitialProducts();
 
 export const useProductStore = create<ProductStore>((set, get) => ({
   products: initial.products,
+  signatureCoutureIds: [],
   isLoading: !initial.hasLoaded,
   hasLoaded: initial.hasLoaded,
   error: null,
 
-  fetchProducts: async (forceFresh = false) => {
+  fetchProducts: async (forceFresh = true) => {
     try {
       const currentProducts = get().products;
       if (!currentProducts || currentProducts.length === 0) {
         set({ isLoading: true });
       }
 
-      const url = forceFresh ? "/api/products?fresh=true" : "/api/products";
-      const res = await fetch(url);
+      // Always bypass browser cache with fresh timestamp & cache: "no-store"
+      const url = `/api/products?t=${Date.now()}${forceFresh ? "&fresh=true" : ""}`;
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -115,6 +110,53 @@ export const useProductStore = create<ProductStore>((set, get) => ({
     }
   },
 
+  fetchSignatureCouture: async () => {
+    try {
+      const res = await fetch(`/api/signature-couture?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.productIds)) {
+          set({ signatureCoutureIds: data.productIds });
+          return data.productIds;
+        }
+      }
+    } catch (e) {
+      console.warn("Error fetching signature couture:", e);
+    }
+    return get().signatureCoutureIds;
+  },
+
+  setSignatureCoutureIds: async (ids: string[]) => {
+    try {
+      set({ signatureCoutureIds: ids });
+      const res = await fetch("/api/signature-couture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds: ids }),
+      });
+      if (res.ok) {
+        const idSet = new Set(ids);
+        const updated = get().products.map((p) => ({
+          ...p,
+          inSignatureCouture: idSet.has(p.id) || idSet.has(p.slug),
+        }));
+        set({ products: updated });
+        persistProducts(updated);
+        return true;
+      }
+    } catch (e) {
+      console.error("setSignatureCoutureIds error:", e);
+    }
+    return false;
+  },
+
+  toggleSignatureCoutureProduct: async (productId: string) => {
+    const current = get().signatureCoutureIds;
+    const exists = current.includes(productId);
+    const next = exists ? current.filter((id) => id !== productId) : [...current, productId];
+    return get().setSignatureCoutureIds(next);
+  },
+
   addProduct: async (productData: any) => {
     try {
       set({ isLoading: true });
@@ -133,6 +175,14 @@ export const useProductStore = create<ProductStore>((set, get) => ({
       const updatedProducts = [createdProduct, ...get().products.filter((p) => p.id !== createdProduct.id)];
       set({ products: updatedProducts, isLoading: false });
       persistProducts(updatedProducts);
+
+      // If createdProduct has inSignatureCouture, add to signature list
+      if (productData.inSignatureCouture && createdProduct.id) {
+        const currentSig = get().signatureCoutureIds;
+        if (!currentSig.includes(createdProduct.id)) {
+          get().setSignatureCoutureIds([createdProduct.id, ...currentSig]);
+        }
+      }
 
       return createdProduct;
     } catch (err: any) {
@@ -179,7 +229,8 @@ export const useProductStore = create<ProductStore>((set, get) => ({
       if (!res.ok) throw new Error("Failed to delete product");
 
       const updatedProducts = get().products.filter((p) => p.id !== id);
-      set({ products: updatedProducts, isLoading: false });
+      const updatedSig = get().signatureCoutureIds.filter((sigId) => sigId !== id);
+      set({ products: updatedProducts, signatureCoutureIds: updatedSig, isLoading: false });
       persistProducts(updatedProducts);
 
       return true;

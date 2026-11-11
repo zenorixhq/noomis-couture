@@ -51,6 +51,9 @@ export interface Product {
   }[];
   specifications?: { [key: string]: string };
   reviews?: Review[];
+  createdAt?: string;
+  updatedAt?: string;
+  inSignatureCouture?: boolean;
 }
 
 export interface Category {

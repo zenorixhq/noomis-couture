@@ -80,9 +80,9 @@ function ProductCatalogContent() {
     return defaultCategories;
   });
 
-  // Sync with database on mount
+  // Sync with database on mount (force fresh to show newly added products immediately)
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(true);
     fetch("/api/categories")
       .then((r) => r.json())
       .then((data) => {
@@ -158,8 +158,31 @@ function ProductCatalogContent() {
         if (sortBy === "price-asc") return priceA - priceB;
         if (sortBy === "price-desc") return priceB - priceA;
         if (sortBy === "rating") return b.rating - a.rating;
-        if (sortBy === "newest") return (b.isNewArrival ? 1 : 0) - (a.isNewArrival ? 1 : 0);
-        return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+
+        if (sortBy === "newest") {
+          if (timeB !== timeA) return timeB - timeA;
+          return (b.isNewArrival ? 1 : 0) - (a.isNewArrival ? 1 : 0);
+        }
+
+        // Default "featured":
+        // 1. Newly created pieces from recent days always surface at the top
+        const isRecentA = timeA > Date.now() - 14 * 86400 * 1000;
+        const isRecentB = timeB > Date.now() - 14 * 86400 * 1000;
+        if (isRecentA && !isRecentB) return -1;
+        if (!isRecentA && isRecentB) return 1;
+        if (isRecentA && isRecentB && timeB !== timeA) return timeB - timeA;
+
+        // 2. Signature Couture items and Featured items rank next
+        const scoreA = (a.inSignatureCouture ? 3 : 0) + (a.featured ? 2 : 0) + (a.isBestSeller ? 1 : 0);
+        const scoreB = (b.inSignatureCouture ? 3 : 0) + (b.featured ? 2 : 0) + (b.isBestSeller ? 1 : 0);
+        if (scoreB !== scoreA) return scoreB - scoreA;
+
+        // 3. Tie-break by newest creation timestamp
+        if (timeB !== timeA) return timeB - timeA;
+        return 0;
       });
   }, [products, selectedCategory, searchTerm, priceRange, inStockOnly, sortBy]);
 

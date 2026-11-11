@@ -12,6 +12,8 @@ export function FeaturedProductsGrid() {
   const products = useProductStore((s) => s.products);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const hasLoaded = useProductStore((s) => s.hasLoaded);
+  const signatureCoutureIds = useProductStore((s) => s.signatureCoutureIds);
+  const fetchSignatureCouture = useProductStore((s) => s.fetchSignatureCouture);
 
   const [activeTab, setActiveTab] = useState<"all" | "featured" | "bestseller">("all");
 
@@ -19,39 +21,86 @@ export function FeaturedProductsGrid() {
     if (!hasLoaded) {
       fetchProducts();
     }
-  }, [hasLoaded, fetchProducts]);
+    fetchSignatureCouture();
+  }, [hasLoaded, fetchProducts, fetchSignatureCouture]);
 
-  // Sort and filter to exactly 6 products (3*2 grid) with Featured and Best Sellers first
+  // Sort and filter to exactly 6 products (3*2 grid) honoring admin's selected Signature Couture items
   const displayProducts = useMemo(() => {
     if (!Array.isArray(products) || products.length === 0) return [];
 
+    // 1. If admin has curated specific items for Signature Couture:
+    if (signatureCoutureIds && signatureCoutureIds.length > 0) {
+      const curated = signatureCoutureIds
+        .map((id) => products.find((p) => p.id === id || p.slug === id))
+        .filter(Boolean) as Product[];
+
+      if (curated.length > 0) {
+        if (activeTab === "featured") {
+          const feat = curated.filter((p) => p.featured);
+          const rest = curated.filter((p) => !p.featured);
+          const combined = [...feat, ...rest];
+          if (combined.length < 6) {
+            const backfill = products.filter((p) => !signatureCoutureIds.includes(p.id) && p.featured);
+            return [...combined, ...backfill].slice(0, 6);
+          }
+          return combined.slice(0, 6);
+        }
+
+        if (activeTab === "bestseller") {
+          const bs = curated.filter((p) => p.isBestSeller);
+          const rest = curated.filter((p) => !p.isBestSeller);
+          const combined = [...bs, ...rest];
+          if (combined.length < 6) {
+            const backfill = products.filter((p) => !signatureCoutureIds.includes(p.id) && p.isBestSeller);
+            return [...combined, ...backfill].slice(0, 6);
+          }
+          return combined.slice(0, 6);
+        }
+
+        // Tab "all": show curated items in exact selected order
+        if (curated.length < 6) {
+          const backfill = products.filter((p) => !signatureCoutureIds.includes(p.id));
+          return [...curated, ...backfill].slice(0, 6);
+        }
+        return curated.slice(0, 6);
+      }
+    }
+
+    // 2. Alternatively check items marked with inSignatureCouture flag
+    const marked = products.filter((p) => p.inSignatureCouture);
+    if (marked.length >= 6) {
+      if (activeTab === "featured") {
+        return [...marked.filter((p) => p.featured), ...marked.filter((p) => !p.featured)].slice(0, 6);
+      }
+      if (activeTab === "bestseller") {
+        return [...marked.filter((p) => p.isBestSeller), ...marked.filter((p) => !p.isBestSeller)].slice(0, 6);
+      }
+      return marked.slice(0, 6);
+    }
+
     if (activeTab === "featured") {
       const featured = products.filter((p) => p.featured);
-      // Backfill with best sellers or in-stock products if fewer than 6
       const backfill = products.filter((p) => !p.featured);
       return [...featured, ...backfill].slice(0, 6);
     }
 
     if (activeTab === "bestseller") {
       const bestSellers = products.filter((p) => p.isBestSeller);
-      // Backfill with featured or in-stock products if fewer than 6
       const backfill = products.filter((p) => !p.isBestSeller);
       return [...bestSellers, ...backfill].slice(0, 6);
     }
 
     // Default "all": Rank products so that Featured and Best Sellers appear first
     const ranked = [...products].sort((a, b) => {
-      // Score: Featured (2) + BestSeller (1)
-      const scoreA = (a.featured ? 2 : 0) + (a.isBestSeller ? 1 : 0);
-      const scoreB = (b.featured ? 2 : 0) + (b.isBestSeller ? 1 : 0);
+      const scoreA = (a.inSignatureCouture ? 3 : 0) + (a.featured ? 2 : 0) + (a.isBestSeller ? 1 : 0);
+      const scoreB = (b.inSignatureCouture ? 3 : 0) + (b.featured ? 2 : 0) + (b.isBestSeller ? 1 : 0);
       if (scoreB !== scoreA) return scoreB - scoreA;
-      // Secondary preference for in-stock
       if (a.inStock !== b.inStock) return a.inStock ? -1 : 1;
       return 0;
     });
 
     return ranked.slice(0, 6);
-  }, [products, activeTab]);
+  }, [products, signatureCoutureIds, activeTab]);
 
   return (
     <section id="featured-products" className="w-full py-12 sm:py-16 md:py-20 bg-[#FAF7F2] border-b border-[#EADBBE]/50">
