@@ -21,7 +21,6 @@ import {
   ChevronDown,
   ArrowRight,
   CheckCircle2,
-  MessageCircle,
   Sparkles,
   Ruler,
   AlertCircle,
@@ -258,53 +257,6 @@ export function ProductDetailClient({
     if (isOutOfStock) return;
     handleAddToCart();
     router.push("/checkout");
-  };
-
-  const handleDirectWhatsAppOrder = () => {
-    const combinedOptions: { [key: string]: string } = { ...currentOptions };
-    if (sizeInfo && effectiveSize) {
-      combinedOptions[sizeInfo.label] = effectiveSize;
-    }
-
-    const selectedVariantSummary = Object.entries(combinedOptions)
-      .map(([k, v]) => `• *${k}:* *${v}*`)
-      .join("\n");
-
-    const phone = storeConfig.brand.contact.whatsappNumber;
-    const itemTotalFormatted = formatPrice(effectivePrice * quantity, selectedCurrency);
-
-    let greetingMessage = "";
-    if (isOutOfStock) {
-      greetingMessage = `Hello Noomi's Couture! I am inquiring about *${product.title}* in *${effectiveSize || "this size"}*, which is currently out of stock on your website. Could you please notify me when it's back in stock or if custom piece sizing is available? Thank you! 💖`;
-    } else {
-      greetingMessage = isQatar
-        ? "I want to order this piece from your website! Please confirm availability and share payment/delivery details for Qatar (Free Delivery). Thank you! 💖"
-        : "I want to order this piece from your website! Please confirm availability and share your *UPI QR code* so I can pay and confirm my delivery. Thank you! 💖";
-    }
-
-    const message = `━━━━━━━━━━━━━━━━━━━━━
-✨ *G L E A M N E S T* ✨
-_${isOutOfStock ? "Size Restock & Custom Inquiry" : "Instant Order Inquiry"}_
-━━━━━━━━━━━━━━━━━━━━━
-
-💍 *SELECTED PIECE*
-• *Title:* *${product.title}*
-${selectedVariantSummary ? `${selectedVariantSummary}\n` : ""}• *Quantity:* ${quantity}
-${isOutOfStock ? `• *Status:* ⚠️ *Size Currently Out of Stock*\n` : `• *Item Total:* *${itemTotalFormatted}*\n`}• *Destination:* *${isQatar ? "Qatar (Complimentary Delivery)" : "India"}*
-
-💬 *Hello Noomi's Couture Team!*
-${greetingMessage}
-━━━━━━━━━━━━━━━━━━━━━`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const isMobile = typeof window !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    const waUrl = isMobile
-      ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`
-      : `https://web.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
-
-    if (typeof window !== "undefined") {
-      window.open(waUrl, "_blank");
-    }
   };
 
   const handleShare = () => {
@@ -575,7 +527,7 @@ ${greetingMessage}
               </div>
             </div>
 
-            {/* Action Buttons: Add to Bag + Buy Now + WhatsApp Direct */}
+            {/* Action Buttons: Add to Bag + Buy Now */}
             <div className="space-y-3 pt-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
@@ -596,28 +548,12 @@ ${greetingMessage}
                   type="button"
                   disabled={isOutOfStock}
                   onClick={handleBuyNow}
-                  className="py-3.5 px-6 rounded-xl bg-[#4A171C] text-[#FAF8F5] hover:bg-[#380F13] font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 border border-[#C5A059]/40 shadow-sm transition-all active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="py-3.5 px-6 rounded-xl bg-[#184E44] hover:bg-[#123E36] text-[#FAF8F5] font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 border border-emerald-300/30 shadow-sm transition-all active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Sparkles className="w-4 h-4 text-[#D4AF37]" />
                   <span>{isOutOfStock ? "Sold Out" : "Buy Now"}</span>
                 </button>
               </div>
-
-              {/* Direct WhatsApp Ordering */}
-              <button
-                type="button"
-                onClick={handleDirectWhatsAppOrder}
-                className="w-full py-3.5 px-6 rounded-xl bg-[#25D366] text-white hover:bg-[#1EBE5D] font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-md transition-all active:scale-98"
-              >
-                <MessageCircle className="w-4 h-4 fill-current" />
-                <span>
-                  {isOutOfStock
-                    ? "Inquire on WhatsApp (Custom Restock)"
-                    : isQatar
-                    ? "Order via WhatsApp (Qatar Free VIP Delivery)"
-                    : "Direct Order via WhatsApp (Fast Dispatch)"}
-                </span>
-              </button>
 
               <button
                 type="button"
@@ -797,23 +733,23 @@ ${greetingMessage}
                 type="button"
                 disabled={isOutOfStock}
                 onClick={handleAddToCart}
-                className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                   isAdded
                     ? "bg-emerald-600 text-white shadow-sm"
                     : "bg-[#4A171C] text-[#FAF5EB] hover:bg-[#381014] border border-[#D4AF37]/30"
                 }`}
               >
                 {isAdded ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
-                <span>{isAdded ? "Added!" : isOutOfStock ? "Out of Stock" : "Bag"}</span>
+                <span>{isAdded ? "Added!" : isOutOfStock ? "Out of Stock" : "Add to Bag"}</span>
               </button>
               <button
                 type="button"
                 disabled={isOutOfStock}
-                onClick={handleDirectWhatsAppOrder}
-                className="py-2.5 px-3.5 rounded-xl bg-[#25D366] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleBuyNow}
+                className="flex-1 py-2.5 px-3.5 rounded-xl bg-[#184E44] hover:bg-[#123E36] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 border border-emerald-300/30 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <MessageCircle className="w-4 h-4 fill-current" />
-                <span>{isOutOfStock ? "Sold Out" : "WhatsApp"}</span>
+                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                <span>{isOutOfStock ? "Sold Out" : "Buy Now"}</span>
               </button>
             </>
           );
