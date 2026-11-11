@@ -1,17 +1,68 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    let { amount, currency = "INR", receipt } = body;
+    let { amount, currency = "INR", receipt, phone, email, couponCode, firstPurchaseOnly } = body;
 
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return NextResponse.json(
         { error: "Valid amount is required" },
         { status: 400 }
       );
+    }
+
+    // Server-side database verification: NOOMI5 coupon is restricted to first-time buyers only
+    if (couponCode === "NOOMI5" || firstPurchaseOnly) {
+      const cleanPhone = (phone || "").replace(/\D/g, "");
+      const cleanEmail = (email || "").trim();
+      const orConditions: any[] = [];
+
+      if (cleanPhone.length >= 7) {
+        orConditions.push({
+          customerPhone: {
+            contains: cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone.slice(-8),
+          },
+        });
+      }
+      if (cleanEmail && cleanEmail.includes("@")) {
+        orConditions.push({
+          customerEmail: {
+            equals: cleanEmail,
+            mode: "insensitive",
+          },
+        });
+      }
+
+      if (orConditions.length > 0) {
+        try {
+          const existingOrder = await prisma.order.findFirst({
+            where: {
+              OR: orConditions,
+              paymentStatus: {
+                not: "failed",
+              },
+            },
+            select: { orderNumber: true },
+          });
+
+          if (existingOrder) {
+            return NextResponse.json(
+              {
+                error: "The NOOMI5 5% first-purchase offer was already redeemed on an earlier order. Normal rates apply.",
+                couponRejected: true,
+                existingOrderNumber: existingOrder.orderNumber,
+              },
+              { status: 400 }
+            );
+          }
+        } catch (dbErr) {
+          console.warn("Coupon database check warning:", dbErr);
+        }
+      }
     }
 
     // Convert to paise if passed in Rupees (e.g., store checkout passing 299 for ₹299)

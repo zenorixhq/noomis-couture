@@ -8,20 +8,50 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
-    // 1. First-purchase discount check
+    // 1. First-purchase discount check (Neon PostgreSQL cross-device verification)
     if (searchParams.get("checkFirstPurchase") === "true") {
       const phone = searchParams.get("phone") || searchParams.get("query") || "";
+      const email = (searchParams.get("email") || "").trim();
       const cleanPhone = phone.replace(/[^0-9]/g, "");
+
+      const orConditions: any[] = [];
       if (cleanPhone.length >= 7) {
-        const existingOrder = await prisma.order.findFirst({
-          where: {
-            customerPhone: {
-              contains: cleanPhone.slice(-8),
-            },
+        orConditions.push({
+          customerPhone: {
+            contains: cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone.slice(-8),
           },
         });
-        return NextResponse.json({ isFirstPurchase: !existingOrder });
       }
+      if (email && email.includes("@")) {
+        orConditions.push({
+          customerEmail: {
+            equals: email,
+            mode: "insensitive",
+          },
+        });
+      }
+
+      if (orConditions.length > 0) {
+        const existingOrder = await prisma.order.findFirst({
+          where: {
+            OR: orConditions,
+            paymentStatus: {
+              not: "failed",
+            },
+          },
+          select: {
+            id: true,
+            orderNumber: true,
+            createdAt: true,
+          },
+        });
+
+        return NextResponse.json({
+          isFirstPurchase: !existingOrder,
+          existingOrder: existingOrder ? existingOrder.orderNumber : null,
+        });
+      }
+
       return NextResponse.json({ isFirstPurchase: true });
     }
 

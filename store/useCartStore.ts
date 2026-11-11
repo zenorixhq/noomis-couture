@@ -173,7 +173,13 @@ export const useCartStore = create<CartStore>()(
             const clean = phone.replace(/[^0-9]/g, "");
             if (clean.length >= 7 && placedOrdersStr) {
               const placed = JSON.parse(placedOrdersStr || "[]");
-              if (placed.some((o: any) => (o.phone || "").replace(/[^0-9]/g, "").includes(clean.slice(-8)))) {
+              if (
+                placed.some((o: any) =>
+                  (o.phone || o.customerPhone || o.customer?.phone || "")
+                    .replace(/[^0-9]/g, "")
+                    .includes(clean.slice(-8))
+                )
+              ) {
                 return false;
               }
             }

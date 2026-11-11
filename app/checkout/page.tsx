@@ -98,20 +98,50 @@ export default function CheckoutPage() {
     }
   }, [appliedCoupon, autoCheckAndApplyFirstPurchaseDiscount, removeCoupon]);
 
-  // Real-time verification against database orders
+  // Check Neon PostgreSQL database to verify whether phone / email has placed an order previously
+  const verifyFirstPurchaseServer = async (phoneStr: string, emailStr: string): Promise<boolean> => {
+    const clean = phoneStr.replace(/\D/g, "");
+    const cleanEmail = emailStr.trim();
+    if (clean.length < 7 && (!cleanEmail || !cleanEmail.includes("@"))) {
+      return true;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/orders?checkFirstPurchase=true&phone=${encodeURIComponent(clean)}&email=${encodeURIComponent(cleanEmail)}`
+      );
+      if (!res.ok) return true;
+      const data = await res.json();
+      return data.isFirstPurchase !== false;
+    } catch {
+      return true;
+    }
+  };
+
+  // Real-time verification against Neon PostgreSQL database orders
   useEffect(() => {
     const cleanPhone = formData.phone.replace(/\D/g, "");
-    if (cleanPhone.length >= 10) {
-      const isFirst = isFirstPurchaseCustomer(cleanPhone);
-      if (!isFirst && appliedCoupon?.firstPurchaseOnly) {
-        removeCoupon();
-        setCouponMsg({
-          type: "error",
-          text: "Welcome back! The 5% first-purchase offer was redeemed on an earlier order. Standard order rate applies.",
-        });
-      }
+    const cleanEmail = formData.email.trim();
+
+    if (cleanPhone.length >= 10 || (cleanEmail && cleanEmail.includes("@"))) {
+      verifyFirstPurchaseServer(cleanPhone, cleanEmail).then((isFirst) => {
+        if (!isFirst) {
+          try {
+            localStorage.setItem("noomis_has_purchased", "true");
+            if (cleanPhone) localStorage.setItem("noomis_customer_phone", cleanPhone);
+          } catch (e) {}
+
+          if (appliedCoupon?.firstPurchaseOnly) {
+            removeCoupon();
+            setCouponMsg({
+              type: "error",
+              text: "Welcome back! The NOOMI5 5% first-purchase offer was already redeemed on an earlier order with this mobile number or email. Standard pricing has been applied.",
+            });
+          }
+        }
+      });
     }
-  }, [formData.phone, appliedCoupon, isFirstPurchaseCustomer, removeCoupon]);
+  }, [formData.phone, formData.email, appliedCoupon, removeCoupon]);
 
   const subtotal = useCartStore((s) => s.getSubtotal)();
   const discount = useCartStore((s) => s.getDiscountAmount)();
@@ -144,11 +174,30 @@ export default function CheckoutPage() {
     );
   }
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!couponCode.trim()) return;
+    const code = couponCode.trim();
+    if (!code) return;
 
-    const res = applyCoupon(couponCode.trim());
+    // Strict database check if attempting to apply NOOMI5
+    if (code.toUpperCase() === "NOOMI5") {
+      const cleanPhone = formData.phone.replace(/\D/g, "");
+      const cleanEmail = formData.email.trim();
+      if (cleanPhone.length >= 10 || (cleanEmail && cleanEmail.includes("@"))) {
+        const isFirst = await verifyFirstPurchaseServer(cleanPhone, cleanEmail);
+        if (!isFirst) {
+          removeCoupon();
+          setCouponMsg({
+            type: "error",
+            text: "The NOOMI5 5% first-purchase offer was already redeemed on an earlier order. Normal rates apply.",
+          });
+          setCouponCode("");
+          return;
+        }
+      }
+    }
+
+    const res = applyCoupon(code);
     if (res.success) {
       setCouponMsg({ type: "success", text: res.message });
       setCouponCode("");
@@ -178,10 +227,30 @@ export default function CheckoutPage() {
     }
 
     setIsSubmitting(true);
+    const cleanEmail = formData.email.trim();
+
+    // Final pre-order check: verify first purchase status against Neon database before opening payment gateway
+    if (appliedCoupon?.firstPurchaseOnly) {
+      const isFirst = await verifyFirstPurchaseServer(cleanPhone, cleanEmail);
+      if (!isFirst) {
+        removeCoupon();
+        try {
+          localStorage.setItem("noomis_has_purchased", "true");
+          if (cleanPhone) localStorage.setItem("noomis_customer_phone", cleanPhone);
+        } catch (e) {}
+
+        setIsSubmitting(false);
+        alert(
+          "Welcome back! The NOOMI5 5% first-purchase discount was already redeemed on an earlier order with this mobile number or email. Your order has been updated to standard rates."
+        );
+        return;
+      }
+    }
+
     const orderNumber = `NC-${Math.floor(10000 + Math.random() * 90000)}`;
 
     try {
-      // 1. Create Razorpay order via backend API
+      // 1. Create Razorpay order via backend API (with server-side validation against database)
       const orderRes = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -189,11 +258,21 @@ export default function CheckoutPage() {
           amount: grandTotal,
           currency: "INR",
           receipt: `rcpt_${Date.now()}`,
+          phone: cleanPhone,
+          email: cleanEmail,
+          couponCode: appliedCoupon?.code,
+          firstPurchaseOnly: appliedCoupon?.firstPurchaseOnly,
         }),
       });
 
       const orderData = await orderRes.json();
       if (!orderRes.ok || !orderData.id) {
+        if (orderData.couponRejected) {
+          removeCoupon();
+          setIsSubmitting(false);
+          alert(orderData.error || "The first-purchase discount has already been used for this account.");
+          return;
+        }
         throw new Error(orderData.error || "Failed to initiate payment gateway");
       }
 
