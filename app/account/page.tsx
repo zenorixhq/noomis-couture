@@ -220,16 +220,15 @@ function AccountPageContent() {
   const createWhatsAppOrderUrl = (order: any) => {
     const isPaid = order.paymentStatus === "paid" || !!order.razorpayPaymentId || !!order.paymentId;
     const itemsList = order.items?.length
-      ? order.items.map((it: any) => `• *${it.quantity}x* ${it.title} (₹${it.price})`).join("\n")
+      ? order.items.map((it: any) => `• *${it.quantity}x* ${it.title} (₹${Number(it.price).toLocaleString("en-IN")})`).join("\n")
       : "";
     
-    let msg = `━━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `👑 *N O O M I ' S   C O U T U R E*\n`;
+    let msg = `✨ *NOOMI'S COUTURE* ✨\n`;
     msg += `_Order Tracking & Concierge Inquiry_\n`;
-    msg += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    msg += `✨ *ORDER REFERENCE:* #${order.orderNumber}\n`;
-    msg += `💰 *TOTAL AMOUNT:* ₹${order.grandTotal}\n`;
-    msg += `💳 *PAYMENT:* ${isPaid ? "Paid & Verified (Razorpay)" : "Pending"}\n`;
+    msg += `------------------------------------------\n\n`;
+    msg += `👑 *ORDER REFERENCE:* #${order.orderNumber}\n`;
+    msg += `💰 *TOTAL AMOUNT:* ₹${Number(order.grandTotal).toLocaleString("en-IN")}\n`;
+    msg += `✅ *PAYMENT:* ${isPaid ? "Paid & Verified (Razorpay)" : "Pending"}\n`;
     if (order.razorpayPaymentId || order.paymentId) {
       msg += `🔖 *TRANSACTION ID:* ${order.razorpayPaymentId || order.paymentId}\n`;
     }
@@ -237,14 +236,14 @@ function AccountPageContent() {
       msg += `📦 *TRACKING CODE:* ${order.trackingNumber}\n`;
     }
     if (itemsList) {
-      msg += `\n💍 *ITEMS ORDERED:*\n${itemsList}\n`;
+      msg += `\n💎 *ITEMS ORDERED:*\n${itemsList}\n`;
     }
-    msg += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `\n------------------------------------------\n`;
     msg += `💬 *MESSAGE TO CONCIERGE:*\n`;
     msg += `"Hello Noomi's Couture team! I am inquiring about my order #${order.orderNumber}. Could you please provide dispatch tracking details? Thank you! 💖"\n`;
-    msg += `━━━━━━━━━━━━━━━━━━━━━`;
+    msg += `------------------------------------------`;
 
-    return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(msg)}`;
+    return `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodeURIComponent(msg)}`;
   };
 
   return (

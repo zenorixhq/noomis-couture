@@ -135,10 +135,10 @@ export function generateWhatsAppOrderMessage(
 
   // 1. Order Confirmed & In Preparation
   if (type === "confirmed") {
-    return `━━━━━━━━━━━━━━━━━━━━━
+    return `------------------------------------------
 ✨ *N O O M I ' S  C O U T U R E* ✨
 _Wear Your Confidence • Everyday Luxury_
-━━━━━━━━━━━━━━━━━━━━━
+------------------------------------------
 
 Dear *${customerName}*,
 
@@ -174,15 +174,15 @@ If you have any questions or custom requests, simply reply to this WhatsApp mess
 With warm regards,
 *Noomi's Couture Atelier*
 _Wear Your Confidence Daily_ 💖
-━━━━━━━━━━━━━━━━━━━━━`;
+------------------------------------------`;
   }
 
   // 2. Dispatched with Tracking
   if (type === "shipped") {
-    return `━━━━━━━━━━━━━━━━━━━━━
+    return `------------------------------------------
 ✨ *N O O M I ' S  C O U T U R E* ✨
 _Wear Your Confidence • Everyday Luxury_
-━━━━━━━━━━━━━━━━━━━━━
+------------------------------------------
 
 Dear *${customerName}*,
 
@@ -209,14 +209,14 @@ Thank you for trusting *Noomi's Couture* to elevate your daily style! 💍
 Warm regards,
 *Noomi's Couture Concierge*
 _WhatsApp: +91 96339 56222_ 💖
-━━━━━━━━━━━━━━━━━━━━━`;
+------------------------------------------`;
   }
 
   // 3. Delivered & Care Guide
-  return `━━━━━━━━━━━━━━━━━━━━━
+  return `------------------------------------------
 ✨ *N O O M I ' S  C O U T U R E* ✨
 _Wear Your Confidence • Everyday Luxury_
-━━━━━━━━━━━━━━━━━━━━━
+------------------------------------------
 
 Dear *${customerName}*,
 
@@ -236,7 +236,7 @@ Have any questions? Simply reply to this chat!
 
 With love,
 *Team Noomi's Couture* 💖
-━━━━━━━━━━━━━━━━━━━━━`;
+------------------------------------------`;
 }
 
 /**
@@ -245,5 +245,5 @@ With love,
 export function getWhatsAppUrl(phone: string, text: string): string {
   const clean = cleanWhatsAppNumber(phone);
   const encoded = encodeURIComponent(text);
-  return `https://wa.me/${clean}?text=${encoded}`;
+  return `https://api.whatsapp.com/send?phone=${clean}&text=${encoded}`;
 }

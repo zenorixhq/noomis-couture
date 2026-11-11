@@ -91,6 +91,16 @@ function SuccessContent() {
     } catch (err) {}
   };
 
+  const [copiedMsg, setCopiedMsg] = useState(false);
+
+  const handleCopyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      setCopiedMsg(true);
+      setTimeout(() => setCopiedMsg(false), 2200);
+    } catch (e) {}
+  };
+
   const custName =
     orderDetails?.customer?.fullName ||
     orderDetails?.customerName ||
@@ -105,12 +115,13 @@ function SuccessContent() {
   const itemsList = orderDetails?.items?.length
     ? orderDetails.items
         .map(
-          (it: any) =>
-            `• *${it.quantity}x* ${it.title}${
-              it.selectedVariant
-                ? ` (${Object.values(it.selectedVariant.options || {}).join(", ")})`
-                : ""
-            } — ₹${it.price * it.quantity}`
+          (it: any) => {
+            const variantStr = it.selectedVariant?.options
+              ? ` [${Object.values(it.selectedVariant.options).join(", ")}]`
+              : "";
+            const price = Number(it.price * it.quantity).toLocaleString("en-IN");
+            return `• *${it.quantity}x* ${it.title}${variantStr} - ₹${price}`;
+          }
         )
         .join("\n")
     : "";
@@ -120,12 +131,11 @@ function SuccessContent() {
       ? `${orderDetails.customer.address.street}, ${orderDetails.customer.address.city}, ${orderDetails.customer.address.state} - ${orderDetails.customer.address.postalCode}`
       : orderDetails?.shippingAddress || "";
 
-  let whatsappMessage = `━━━━━━━━━━━━━━━━━━━━━\n`;
-  whatsappMessage += `✨ *N O O M I ' S   C O U T U R E* ✨\n`;
+  let whatsappMessage = `✨ *NOOMI'S COUTURE* ✨\n`;
   whatsappMessage += `_Official Order Confirmation & Priority Dispatch_\n`;
-  whatsappMessage += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  whatsappMessage += `------------------------------------------\n\n`;
   whatsappMessage += `👑 *ORDER REFERENCE:* #${orderNumber}\n`;
-  whatsappMessage += `💳 *PAYMENT:* Paid & Verified (Razorpay)\n`;
+  whatsappMessage += `✅ *PAYMENT:* Paid & Verified (Razorpay)\n`;
   whatsappMessage += `💰 *TOTAL AMOUNT:* ${displayTotal}\n`;
   if (paymentId) {
     whatsappMessage += `🔖 *TRANSACTION ID:* ${paymentId}\n`;
@@ -139,16 +149,19 @@ function SuccessContent() {
     whatsappMessage += `• *Deliver To:* ${addressText}\n`;
   }
   if (itemsList) {
-    whatsappMessage += `\n💍 *ITEMS ORDERED:*\n${itemsList}\n`;
+    whatsappMessage += `\n💎 *ITEMS ORDERED:*\n${itemsList}\n`;
   }
-  whatsappMessage += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+  whatsappMessage += `\n------------------------------------------\n`;
   whatsappMessage += `💬 *MESSAGE TO CONCIERGE:*\n`;
   whatsappMessage += `"Hello Noomi's Couture team! I have completed and paid for this order on your website. Please share packing video & dispatch tracking details once ready. Thank you! 💖"\n`;
-  whatsappMessage += `━━━━━━━━━━━━━━━━━━━━━`;
+  whatsappMessage += `------------------------------------------`;
 
   const encodedMsg = encodeURIComponent(whatsappMessage);
+  // Universal WhatsApp API endpoint: resilient against emoji corruption on iOS, Android & Desktop
+  const whatsappApiUrl = `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedMsg}`;
+  // Direct desktop web interface
   const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedMsg}`;
-  const whatsappMobileUrl = `https://wa.me/${whatsappPhone}?text=${encodedMsg}`;
+  const whatsappMobileUrl = whatsappApiUrl;
 
   const accountUrl = `/account?query=${encodeURIComponent(customerPhone || orderNumber)}`;
 
@@ -238,9 +251,9 @@ function SuccessContent() {
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-            {/* Desktop: WhatsApp Web button */}
+            {/* Primary Action: Direct WhatsApp API (Works on Mobile & Desktop without emoji glitches) */}
             <a
-              href={whatsappWebUrl}
+              href={whatsappApiUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-[0_6px_20px_rgba(37,211,102,0.35)] hover:shadow-[0_8px_24px_rgba(37,211,102,0.5)] active:scale-95 flex items-center justify-center gap-2 group"
@@ -249,16 +262,36 @@ function SuccessContent() {
               <span>Confirm on WhatsApp</span>
             </a>
 
-            {/* Mobile / Direct App button */}
+            {/* Desktop WhatsApp Web shortcut */}
             <a
-              href={whatsappMobileUrl}
+              href={whatsappWebUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white hover:bg-emerald-50 text-[#128C7E] border border-emerald-300 font-bold text-xs sm:text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <MessageCircle className="w-4 h-4 fill-current shrink-0" />
-              <span>Open in App</span>
+              <span>WhatsApp Web</span>
             </a>
+          </div>
+
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleCopyMessage}
+              className="inline-flex items-center gap-1.5 text-xs text-stone-500 hover:text-emerald-700 transition-colors py-1 px-3 rounded-lg hover:bg-emerald-50/70"
+            >
+              {copiedMsg ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="font-semibold text-emerald-700">Receipt text copied to clipboard!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-stone-400" />
+                  <span>Copy order details</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
