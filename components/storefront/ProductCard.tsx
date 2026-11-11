@@ -137,7 +137,7 @@ export function ProductCard({ product }: ProductCardProps) {
               ? "bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-200"
               : isAdded
               ? "bg-emerald-700 text-white shadow-sm"
-              : "bg-[#2B2725] hover:bg-[#1A1817] text-white shadow-sm hover:shadow"
+              : "bg-[#4A171C] hover:bg-[#381014] text-[#FAF5EB] border border-[#D4AF37]/30 shadow-sm hover:shadow"
           }`}
         >
           {isOutOfStock ? (

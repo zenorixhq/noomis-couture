@@ -585,7 +585,7 @@ ${greetingMessage}
                   className={`py-3.5 px-6 rounded-xl font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed ${
                     isAdded
                       ? "bg-emerald-600 text-white shadow-md"
-                      : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                      : "bg-[#4A171C] text-[#FAF5EB] hover:bg-[#381014] border border-[#D4AF37]/30 shadow-sm"
                   }`}
                 >
                   {isAdded ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
@@ -800,7 +800,7 @@ ${greetingMessage}
                 className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                   isAdded
                     ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-card border-2 border-primary text-primary"
+                    : "bg-[#4A171C] text-[#FAF5EB] hover:bg-[#381014] border border-[#D4AF37]/30"
                 }`}
               >
                 {isAdded ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}

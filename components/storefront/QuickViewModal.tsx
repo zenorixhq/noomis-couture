@@ -307,7 +307,7 @@ export function QuickViewModal() {
                 className={`w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-all ${
                   isOutOfStock
                     ? "bg-stone-200 dark:bg-stone-800 text-stone-500 dark:text-stone-400 cursor-not-allowed border border-border opacity-70"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "bg-[#4A171C] text-[#FAF5EB] hover:bg-[#381014] border border-[#D4AF37]/30"
                 }`}
               >
                 <ShoppingBag className="w-4 h-4" />
