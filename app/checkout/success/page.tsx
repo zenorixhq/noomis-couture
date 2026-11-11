@@ -27,6 +27,7 @@ function SuccessContent() {
   const method = searchParams.get("method") || (paymentId ? "razorpay" : "gateway");
 
   const [copied, setCopied] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
   const isOnlinePayment = method === "razorpay" || !!paymentId;
   const whatsappPhone = storeConfig.brand.contact.whatsappNumber || "919633956222";
 
@@ -35,6 +36,11 @@ function SuccessContent() {
     try {
       const prevOrdersStr = localStorage.getItem("noomis_placed_orders");
       const prevOrders = prevOrdersStr ? JSON.parse(prevOrdersStr) : [];
+      const found = prevOrders.find((o: any) => o.orderNumber === orderNumber);
+      if (found) {
+        setOrderDetails(found);
+      }
+
       const exists = prevOrders.some((o: any) => o.orderNumber === orderNumber);
       if (!exists) {
         const numericTotal = parseFloat(cleanedTotal) || 0;
@@ -55,6 +61,7 @@ function SuccessContent() {
           trackingNumber: `DTDC-IN-${(parseInt(orderNumber.replace(/\D/g, "") || "100000", 10) * 7).toString().slice(0, 6)}`,
         };
         localStorage.setItem("noomis_placed_orders", JSON.stringify([newRecord, ...prevOrders]));
+        setOrderDetails(newRecord);
       }
       if (phone) {
         localStorage.setItem("noomis_customer_phone", phone);
@@ -70,6 +77,26 @@ function SuccessContent() {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {}
   };
+
+  const custName = orderDetails?.customer?.fullName || "Valued Patron";
+  const itemsText = orderDetails?.items?.length
+    ? orderDetails.items.map((it: any) => `• ${it.quantity}x ${it.title} (₹${it.price})`).join("\n")
+    : "";
+  const addressText = orderDetails?.customer?.address
+    ? `${orderDetails.customer.address.street || ""}, ${orderDetails.customer.address.city || ""}, ${orderDetails.customer.address.state || ""} - ${orderDetails.customer.address.postalCode || ""}`
+    : "";
+
+  let whatsappMessage = `✨ *Noomi's Couture - Order Confirmation* ✨\n\n`;
+  whatsappMessage += `*Order Reference:* #${orderNumber}\n`;
+  whatsappMessage += `*Amount Paid:* ${displayTotal} (Razorpay Verified)\n`;
+  if (paymentId) whatsappMessage += `*Payment ID:* ${paymentId}\n`;
+  whatsappMessage += `*Customer:* ${custName}\n`;
+  if (phone || orderDetails?.customer?.phone) whatsappMessage += `*Phone:* ${phone || orderDetails?.customer?.phone}\n`;
+  if (addressText) whatsappMessage += `*Delivery Address:* ${addressText}\n`;
+  if (itemsText) whatsappMessage += `\n*Items Ordered:*\n${itemsText}\n`;
+  whatsappMessage += `\nHi Noomi's Couture! I have confirmed and paid for this order on your website. Please share packing video & dispatch tracking details. Thank you! ✨`;
+
+  const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-8 font-sans">
@@ -135,6 +162,40 @@ function SuccessContent() {
           </div>
         )}
 
+        {/* 1. DEDICATED PROMINENT WHATSAPP CONFIRMATION SECTION */}
+        <div className="bg-gradient-to-br from-[#E8F8F0] via-emerald-50 to-[#FAF7F2] border-2 border-[#25D366]/50 rounded-2xl p-5 sm:p-6 text-center space-y-3.5 shadow-sm">
+          <div className="flex items-center justify-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#25D366]" />
+            </span>
+            <span className="text-xs font-bold uppercase tracking-widest text-emerald-800">
+              Instant Order Confirmation
+            </span>
+          </div>
+
+          <div>
+            <h3 className="font-editorial text-xl sm:text-2xl font-normal text-[#1C1917]">
+              Confirm Your Order on WhatsApp
+            </h3>
+            <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto mt-1 leading-relaxed">
+              Tap below to send your order receipt directly to our concierge on WhatsApp for priority packaging, personal care, and immediate dispatch updates.
+            </p>
+          </div>
+
+          <div className="pt-1">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-sm tracking-wide transition-all shadow-[0_8px_20px_rgba(37,211,102,0.35)] hover:shadow-[0_12px_28px_rgba(37,211,102,0.5)] active:scale-95 group"
+            >
+              <MessageCircle className="w-5 h-5 fill-current shrink-0 group-hover:scale-110 transition-transform" />
+              <span>Confirm Order on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
         {/* Dispatch & Unboxing Advisory */}
         <div className="space-y-3 bg-[#FAF6EF] p-5 rounded-xl border border-[#EADBBE] text-xs text-stone-600">
           <h4 className="font-bold text-[#4A171C] text-sm flex items-center gap-1.5">
@@ -167,16 +228,16 @@ function SuccessContent() {
           </Link>
         </div>
 
-        {/* WhatsApp Concierge Support */}
+        {/* WhatsApp Direct Concierge Help */}
         <div className="pt-4 border-t border-[#EADBBE] flex items-center justify-between text-xs text-stone-500">
-          <span>Need assistance with this order?</span>
+          <span>Need custom assistance or sizing help?</span>
           <a
-            href={`https://wa.me/${whatsappPhone}?text=Hi%20Noomi%27s%20Couture%2C%20I%20have%20an%20inquiry%20regarding%20my%20order%20%23${orderNumber}`}
+            href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[#4A171C] font-bold hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#128C7E] font-bold hover:underline"
           >
-            <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
+            <MessageCircle className="w-4 h-4 fill-[#25D366] text-[#25D366]" />
             <span>Chat on WhatsApp</span>
           </a>
         </div>
