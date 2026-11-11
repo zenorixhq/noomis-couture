@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useProductStore } from "@/store/useProductStore";
 import { formatPrice } from "@/lib/utils";
+import { AnnouncementBar } from "@/components/storefront/AnnouncementBar";
 
 export function Header() {
   const pathname = usePathname();
@@ -102,6 +103,7 @@ export function Header() {
             : "bg-[#FAF7F2]/85 backdrop-blur-xl border-b border-[#EADBBE]/80 shadow-md text-[#240A0D]"
         }`}
       >
+        <AnnouncementBar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* 1. LEFT SEGMENT: Navigation Links (Shop, Collections, About, Contact) on Desktop */}

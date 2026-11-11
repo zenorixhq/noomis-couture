@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { storeConfig } from "@/config/store.config";
-import { AnnouncementBar } from "@/components/storefront/AnnouncementBar";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { QuickViewModal } from "@/components/storefront/QuickViewModal";
 import { WhatsAppFloat } from "@/components/storefront/WhatsAppFloat";
+import { FloatingOfferPill } from "@/components/storefront/FloatingOfferPill";
 import { SmoothScrollProvider } from "@/components/common/SmoothScrollProvider";
 
 export const metadata: Metadata = {
@@ -68,7 +68,6 @@ export default function RootLayout({
     <html lang="en" style={dynamicThemeStyles}>
       <body className="min-h-screen flex flex-col font-sans bg-background text-foreground">
         <SmoothScrollProvider>
-          <AnnouncementBar />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
@@ -77,6 +76,7 @@ export default function RootLayout({
           <CartDrawer />
           <QuickViewModal />
           <WhatsAppFloat />
+          <FloatingOfferPill />
         </SmoothScrollProvider>
       </body>
     </html>

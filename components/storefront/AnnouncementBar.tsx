@@ -11,20 +11,17 @@ export function AnnouncementBar() {
   const [visible, setVisible] = useState(true);
   const selectedCurrency = useCartStore((s) => s.selectedCurrency);
 
-  // On homepage, hero accommodates the entire window with the glass navbar at top-0
-  if (pathname === "/" || pathname?.startsWith("/admin") || !storeConfig.features.enableAnnouncementBar || !visible) {
+  if (pathname?.startsWith("/admin") || !storeConfig.features.enableAnnouncementBar || !visible) {
     return null;
   }
 
   const tickerItems = [
+    "✨ Free Pan-India Shipping on Orders Above ₹999",
+    "🎁 5% OFF On 1st Order with Code NOOMI5",
+    "💎 100% Anti-Tarnish & Waterproof Luxury Jewellery",
+    "⚡ Kerala Express Delivery ₹50 • Outside Kerala ₹70",
     "Noomi's Couture • Wear Your Confidence",
-    "100% Anti-Tarnish & Waterproof",
-    "5% OFF On First Purchase with Code NOOMI5",
-    "Premium 304 & 306 Grade Stainless Steel",
-    `Free Pan-India Delivery Above ₹${storeConfig.commerce.freeShippingThreshold}`,
-    "Kerala Express Shipping ₹50 • Outside Kerala ₹70",
-    "Hypoallergenic & Shower Safe",
-    "Secure Online Payment & Instant Confirmation",
+    "Secure Online Payment & Instant Razorpay Checkout",
   ];
 
   return (

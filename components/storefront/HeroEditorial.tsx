@@ -48,8 +48,8 @@ export function HeroEditorial() {
               Handcrafted with radiant 18K gold finish, composed for everyday luxury and timeless confidence.
             </p>
 
-            {/* CTA Button */}
-            <div className="mt-4 sm:mt-6 md:mt-8">
+            {/* CTA Button (Hidden on mobile per request, visible on tablet & desktop) */}
+            <div className="mt-4 sm:mt-6 md:mt-8 hidden sm:block">
               <Link
                 href="/products"
                 className="inline-flex items-center gap-2 sm:gap-3 px-5 sm:px-7 py-2.5 sm:py-3.5 md:py-4 rounded-full bg-[#184E44] hover:bg-[#133F37] text-white font-medium text-xs sm:text-sm tracking-wide shadow-[0_10px_28px_rgba(24,78,68,0.45)] hover:shadow-[0_14px_36px_rgba(24,78,68,0.65)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group border border-emerald-300/25"
