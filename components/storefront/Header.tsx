@@ -171,40 +171,40 @@ export function Header() {
                 <img
                   src="/images/noomis-medallion.png"
                   alt="Noomi's Couture Medallion"
-                  className="w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
+                  className="w-8 h-8 xs:w-9 xs:h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-13 lg:h-13 object-contain drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
                 />
 
-                {/* Mobile View: High-fashion stacked wordmark (prevents horizontal collision with account icon) */}
+                {/* Mobile View: High-fashion stacked wordmark */}
                 <span
                   className={`flex flex-col items-start leading-[1.05] sm:hidden transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
                     isScrolled
                       ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
-                      : "max-w-[120px] opacity-100 translate-x-0 ml-1.5 xs:ml-2"
+                      : "max-w-[150px] opacity-100 translate-x-0 ml-2"
                   } ${
                     isTransparent
                       ? "text-white drop-shadow-sm"
                       : "text-[#4A171C]"
                   }`}
                 >
-                  <span className="font-editorial text-[10.5px] xs:text-[11.5px] font-bold tracking-[0.14em] uppercase">
+                  <span className="font-editorial text-[12px] xs:text-[13.5px] font-bold tracking-[0.14em] uppercase">
                     NOOMI&apos;S
                   </span>
-                  <span className="font-editorial text-[7.5px] xs:text-[8px] tracking-[0.24em] uppercase text-[#C5A059] font-medium">
+                  <span className="font-editorial text-[8.5px] xs:text-[9.5px] tracking-[0.26em] uppercase text-[#C5A059] font-semibold">
                     COUTURE
                   </span>
                 </span>
 
                 {/* Tablet & Desktop View: Single-line expansive luxury wordmark */}
                 <span
-                  className={`hidden sm:inline font-editorial sm:tracking-[0.2em] md:tracking-[0.24em] uppercase font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
+                  className={`hidden sm:inline font-editorial sm:tracking-[0.18em] md:tracking-[0.22em] uppercase font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${
                     isScrolled
                       ? "max-w-0 opacity-0 -translate-x-2 pointer-events-none ml-0"
-                      : "sm:max-w-[420px] opacity-100 translate-x-0 sm:ml-2.5"
+                      : "sm:max-w-[500px] opacity-100 translate-x-0 sm:ml-3"
                   } ${
                     isTransparent
                       ? "text-white drop-shadow-sm group-hover:text-amber-100"
                       : "text-[#4A171C] group-hover:text-[#6B1B24]"
-                  } sm:text-lg md:text-xl lg:text-[1.65rem]`}
+                  } sm:text-xl md:text-2xl lg:text-[1.85rem] xl:text-[2rem]`}
                 >
                   NOOMI&apos;S COUTURE
                 </span>
@@ -341,9 +341,9 @@ export function Header() {
                 <img
                   src="/images/noomis-medallion.png"
                   alt="Noomi's Couture Medallion"
-                  className="w-7 h-7 object-contain"
+                  className="w-9 h-9 object-contain shrink-0"
                 />
-                <span className="font-editorial text-lg tracking-[0.2em] uppercase font-semibold text-[#4A171C]">
+                <span className="font-editorial text-xl tracking-[0.18em] uppercase font-semibold text-[#4A171C]">
                   NOOMI&apos;S COUTURE
                 </span>
               </Link>
