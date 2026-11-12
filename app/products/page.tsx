@@ -26,17 +26,11 @@ function matchesCategory(
   const pCat = (product.category || "").trim().toLowerCase();
   const tSlug = (targetSlug || "").trim().toLowerCase();
 
-  if (tSlug === "bangles" || tSlug === "bangles-kada") {
-    return pCat === "bangles" || pCat === "bangles-kada" || pCat.includes("bangle") || pCat.includes("kada");
-  }
   if (tSlug === "bracelets") {
     return pCat === "bracelets" || pCat.includes("bracelet");
   }
-  if (tSlug === "charm-necklace" || tSlug === "charms") {
-    return pCat === "charm-necklace" || pCat === "charms" || pCat.includes("charm");
-  }
-  if (tSlug === "pendants" || tSlug === "necklaces-and-chains") {
-    return pCat === "pendants" || pCat === "necklaces-and-chains" || pCat.includes("pendant") || pCat.includes("necklace");
+  if (tSlug === "pendants") {
+    return pCat === "pendants" || pCat.includes("pendant");
   }
   if (tSlug === "watches") {
     return pCat === "watches" || pCat.includes("watch");

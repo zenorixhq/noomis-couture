@@ -247,7 +247,7 @@ export default function AdminDashboardPage() {
     sizeStock: Record<string, number>;
   }>({
     title: "",
-    category: "necklaces-and-chains",
+    category: "bracelets",
     price: "",
     salePrice: "",
     stockCount: "10",
@@ -1578,7 +1578,7 @@ export default function AdminDashboardPage() {
 
     setFormState({
       title: "",
-      category: "necklaces-and-chains",
+      category: "bracelets",
       price: "",
       salePrice: "",
       stockCount: "10",
@@ -5516,7 +5516,7 @@ export default function AdminDashboardPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Necklaces & Chains"
+                  placeholder="e.g. Bracelets"
                   value={categoryForm.name}
                   onChange={(e) => {
                     const name = e.target.value;
@@ -5537,7 +5537,7 @@ export default function AdminDashboardPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. necklaces-and-chains"
+                  placeholder="e.g. bracelets"
                   value={categoryForm.slug}
                   onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
                   className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none font-mono"

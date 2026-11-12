@@ -145,7 +145,7 @@ export async function POST(req: Request) {
         salePriceQatar: body.salePriceQatar !== undefined && body.salePriceQatar !== "" && body.salePriceQatar !== null
           ? parseFloat(body.salePriceQatar)
           : null,
-        category: body.category || "necklaces-and-chains",
+        category: body.category || "bracelets",
         tags: JSON.stringify(Array.isArray(body.tags) ? body.tags : [body.category || "jewelry", "New"]),
         images: JSON.stringify(imageUrls),
         rating: 5.0,

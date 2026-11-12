@@ -88,9 +88,7 @@ export function Header() {
 
   const allNavLinks = [
     { label: "Shop All Jewelry", href: "/products" },
-    { label: "Bangles", href: "/products?category=bangles" },
     { label: "Bracelets", href: "/products?category=bracelets" },
-    { label: "Charm Necklace", href: "/products?category=charm-necklace" },
     { label: "Pendants", href: "/products?category=pendants" },
     { label: "Watches", href: "/products?category=watches" },
     { label: "Rings", href: "/products?category=rings" },
