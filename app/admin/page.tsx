@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { storeConfig } from "@/config/store.config";
 import { sampleOrders, categories as defaultCategories } from "@/data/mockData";
@@ -51,6 +51,8 @@ import {
   ArrowUp,
   ArrowDown,
   Check,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
 import { upload } from "@vercel/blob/client";
 import { WhatsAppConfirmationModal } from "@/components/admin/WhatsAppConfirmationModal";
@@ -90,6 +92,7 @@ export default function AdminDashboardPage() {
 
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "inventory" | "config" | "reviews" | "collections" | "reels" | "signature">("inventory");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const [signatureSearchQuery, setSignatureSearchQuery] = useState("");
   const [isUpdatingSignature, setIsUpdatingSignature] = useState(false);
   const [isMigratingBlob, setIsMigratingBlob] = useState(false);
@@ -1934,11 +1937,106 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const filteredInventory = products.filter(
-    (p) =>
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Dynamically extract categories with real-time live product counts
+  const categoryFilterOptions = useMemo(() => {
+    const countsMap = new Map<string, number>();
+
+    products.forEach((p) => {
+      const cat = (p.category || "uncategorized").toLowerCase().trim();
+      countsMap.set(cat, (countsMap.get(cat) || 0) + 1);
+    });
+
+    const list: { slug: string; name: string; count: number }[] = [];
+    const seenSlugs = new Set<string>();
+
+    categoriesList.forEach((c) => {
+      const slug = (c.slug || "").toLowerCase().trim();
+      if (!slug || seenSlugs.has(slug)) return;
+      seenSlugs.add(slug);
+
+      let count = 0;
+      products.forEach((p) => {
+        const pCat = (p.category || "").toLowerCase().trim();
+        const isBangle =
+          (slug === "bangles" || slug === "bangles-kada") &&
+          (pCat === "bangles" || pCat === "bangles-kada" || pCat === "bangle" || pCat === "kada");
+        const isRing =
+          (slug === "rings" || slug === "ring") &&
+          (pCat === "rings" || pCat === "ring");
+        if (pCat === slug || pCat === c.name.toLowerCase().trim() || isBangle || isRing) {
+          count++;
+        }
+      });
+
+      list.push({
+        slug: c.slug,
+        name: c.name,
+        count,
+      });
+    });
+
+    // Also include any categories in products not explicitly in categoriesList
+    products.forEach((p) => {
+      const cat = (p.category || "").trim();
+      if (!cat) return;
+      const lower = cat.toLowerCase();
+      if (!seenSlugs.has(lower)) {
+        seenSlugs.add(lower);
+        const name = cat
+          .split(/[-_]/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+        list.push({
+          slug: cat,
+          name,
+          count: countsMap.get(lower) || 0,
+        });
+      }
+    });
+
+    return list;
+  }, [categoriesList, products]);
+
+  const filteredInventory = useMemo(() => {
+    return products.filter((p) => {
+      // 1. Category Filter
+      if (selectedCategoryFilter !== "all") {
+        const pCat = (p.category || "").toLowerCase().trim();
+        const filterCat = selectedCategoryFilter.toLowerCase().trim();
+
+        const isDirectMatch = pCat === filterCat;
+        const isBangleMatch =
+          (filterCat === "bangles" || filterCat === "bangles-kada") &&
+          (pCat === "bangles" || pCat === "bangles-kada" || pCat === "bangle" || pCat === "kada");
+        const isRingMatch =
+          (filterCat === "rings" || filterCat === "ring") &&
+          (pCat === "rings" || pCat === "ring");
+
+        const targetCatObj = categoriesList.find(
+          (c) => (c.slug || "").toLowerCase() === filterCat || (c.name || "").toLowerCase() === filterCat
+        );
+        const isNameMatch = targetCatObj && pCat === targetCatObj.name.toLowerCase().trim();
+
+        if (!isDirectMatch && !isBangleMatch && !isRingMatch && !isNameMatch) {
+          return false;
+        }
+      }
+
+      // 2. Search Query Filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const titleMatch = (p.title || "").toLowerCase().includes(q);
+        const catMatch = (p.category || "").toLowerCase().includes(q);
+        const skuMatch = (p.id || "").toLowerCase().includes(q);
+        const tagMatch = Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q));
+        if (!titleMatch && !catMatch && !skuMatch && !tagMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [products, selectedCategoryFilter, searchQuery, categoriesList]);
 
   if (isAuthenticated === null) {
     return (
@@ -2197,47 +2295,138 @@ export default function AdminDashboardPage() {
         {/* Tab: Product Catalog Management & Editing */}
         {activeTab === "inventory" && (
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <span>Product Catalog</span>
-                  {hasLoaded ? (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                      {filteredInventory.length} Pieces
-                    </span>
-                  ) : (
-                    <span className="text-xs font-normal text-muted-foreground animate-pulse">
-                      Syncing catalog...
-                    </span>
-                  )}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Add, edit prices, update stock levels, or remove pieces from your live catalog.
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <span>Product Catalog</span>
+                    {hasLoaded ? (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        {filteredInventory.length} of {products.length} Pieces
+                      </span>
+                    ) : (
+                      <span className="text-xs font-normal text-muted-foreground animate-pulse">
+                        Syncing catalog...
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Filter by category or search to edit prices, update stock levels, or manage catalog items.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                  {/* Category Dropdown Filter */}
+                  <div className="relative w-full sm:w-52">
+                    <Filter className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <select
+                      value={selectedCategoryFilter}
+                      onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                      className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg bg-muted/40 border border-border focus:ring-1 focus:ring-primary outline-none font-medium text-foreground cursor-pointer appearance-none hover:bg-muted/60 transition-colors"
+                      title="Filter products by category"
+                    >
+                      <option value="all">All Categories ({products.length})</option>
+                      {categoryFilterOptions.map((c) => (
+                        <option key={c.slug} value={c.slug}>
+                          {c.name} ({c.count})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  </div>
+
+                  {/* Search filter in catalog */}
+                  <div className="relative w-full sm:w-60">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search title, SKU, tag..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-muted/40 border border-border focus:ring-1 focus:ring-primary outline-none"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+                        title="Clear search query"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenAddCategory}
+                    className="px-3.5 py-1.5 rounded-lg border border-border hover:border-primary/50 text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+                    title="Add a new jewelry category"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-primary" />
+                    <span>Add Category</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              {/* Quick-Filter Category Pills Bar (One-click jump to category) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-2 no-scrollbar border-t border-border/50">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                  <Filter className="w-3 h-3" />
+                  <span>Category:</span>
+                </span>
+
                 <button
                   type="button"
-                  onClick={handleOpenAddCategory}
-                  className="px-3.5 py-1.5 rounded-lg border border-border hover:border-primary/50 text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
-                  title="Add a new jewelry category"
+                  onClick={() => setSelectedCategoryFilter("all")}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                    selectedCategoryFilter === "all"
+                      ? "bg-[#4A171C] text-white shadow-xs"
+                      : "bg-muted/50 hover:bg-muted text-stone-600 hover:text-foreground border border-border/60"
+                  }`}
                 >
-                  <Plus className="w-3.5 h-3.5 text-primary" />
-                  <span>Add Category</span>
+                  <span>All Pieces</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${selectedCategoryFilter === "all" ? "bg-white/20 text-white" : "bg-black/5 text-stone-500"}`}>
+                    {products.length}
+                  </span>
                 </button>
 
-                {/* Search filter in catalog */}
-                <div className="relative w-full sm:w-72">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Filter products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-muted/40 border border-border focus:ring-1 focus:ring-primary outline-none"
-                  />
-                </div>
+                {categoryFilterOptions.map((cat) => {
+                  const isActive = selectedCategoryFilter === cat.slug;
+                  return (
+                    <button
+                      key={cat.slug}
+                      type="button"
+                      onClick={() => setSelectedCategoryFilter(cat.slug)}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                        isActive
+                          ? "bg-[#4A171C] text-white shadow-xs"
+                          : "bg-muted/50 hover:bg-muted text-stone-600 hover:text-foreground border border-border/60"
+                      }`}
+                    >
+                      <span>{cat.name}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-black/5 text-stone-500"}`}>
+                        {cat.count}
+                      </span>
+                    </button>
+                  );
+                })}
+
+                {/* Reset Filter Button */}
+                {(selectedCategoryFilter !== "all" || searchQuery.trim()) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryFilter("all");
+                      setSearchQuery("");
+                    }}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium text-stone-500 hover:text-destructive hover:bg-destructive/10 transition-colors whitespace-nowrap flex items-center gap-1 ml-auto shrink-0"
+                    title="Reset all filters"
+                  >
+                    <X className="w-3 h-3" />
+                    <span>Reset Filter</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -2250,14 +2439,31 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
             ) : filteredInventory.length === 0 ? (
-              <div className="py-16 text-center space-y-2 bg-muted/10 rounded-2xl border border-dashed border-border p-8">
+              <div className="py-16 text-center space-y-3 bg-muted/10 rounded-2xl border border-dashed border-border p-8">
                 <Package className="w-8 h-8 text-muted-foreground mx-auto" />
                 <p className="text-xs font-bold text-foreground">No products found</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {searchQuery
+                <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
+                  {selectedCategoryFilter !== "all" && searchQuery
+                    ? `No pieces found in category "${categoryFilterOptions.find((c) => c.slug === selectedCategoryFilter)?.name || selectedCategoryFilter}" matching "${searchQuery}".`
+                    : selectedCategoryFilter !== "all"
+                    ? `No pieces currently listed under category "${categoryFilterOptions.find((c) => c.slug === selectedCategoryFilter)?.name || selectedCategoryFilter}".`
+                    : searchQuery
                     ? `No pieces match "${searchQuery}". Try a different search query.`
                     : "Your live catalog is currently empty. Click 'Add New Product' to get started."}
                 </p>
+                {(selectedCategoryFilter !== "all" || searchQuery) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryFilter("all");
+                      setSearchQuery("");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>View All Products</span>
+                  </button>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -2292,7 +2498,16 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 capitalize text-muted-foreground">{product.category}</td>
+                      <td className="py-3 capitalize text-muted-foreground">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCategoryFilter(product.category || "all")}
+                          title={`Filter catalog by "${product.category}"`}
+                          className="hover:text-primary hover:underline transition-colors text-left font-medium"
+                        >
+                          {product.category}
+                        </button>
+                      </td>
                       <td className="py-3 font-semibold text-foreground">
                         <div className="flex flex-col text-xs leading-tight">
                           <span className="text-foreground">
