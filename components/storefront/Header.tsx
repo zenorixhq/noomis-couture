@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { storeConfig } from "@/config/store.config";
@@ -31,6 +31,26 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState<number | undefined>(undefined);
+
+  // Dynamically compute exact header height including AnnouncementBar
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const updateHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+    updateHeight();
+    const ro = new ResizeObserver(updateHeight);
+    ro.observe(headerRef.current);
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [pathname]);
 
   const products = useProductStore((s) => s.products);
   const items = useCartStore((s) => s.items);
@@ -102,6 +122,7 @@ export function Header() {
     <>
       {/* Fixed Persistent Glass Navbar (Give navbar all times) */}
       <header
+        ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 touch-pan-y ${
           isTransparent
             ? "bg-black/20 backdrop-blur-md border-b border-white/15 text-white shadow-[0_4px_30px_rgba(0,0,0,0.12)]"
@@ -320,7 +341,13 @@ export function Header() {
       </header>
 
       {/* Offset spacer on inner pages so content is not obscured by fixed navbar */}
-      {!isHomepage && <div className="h-16 sm:h-20 w-full" aria-hidden="true" />}
+      {!isHomepage && (
+        <div
+          style={headerHeight ? { height: `${headerHeight}px` } : undefined}
+          className="w-full shrink-0 h-[98px] sm:h-[114px]"
+          aria-hidden="true"
+        />
+      )}
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
