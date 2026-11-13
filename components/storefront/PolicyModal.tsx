@@ -761,7 +761,7 @@ export function PolicyModal({
                   </p>
                 </div>
                 <span className="self-start sm:self-auto text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  Free Over ₹999 • Kerala ₹50 • Outside ₹70
+                  Free Delivery Above ₹999 • Kerala ₹50 • Outside ₹70
                 </span>
               </div>
 

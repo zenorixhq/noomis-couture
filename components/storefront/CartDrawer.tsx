@@ -158,7 +158,7 @@ export function CartDrawer() {
                 {amountNeeded === 0 ? (
                   <span className="text-emerald-600 font-semibold flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Complimentary Shipping Unlocked!
+                    Complimentary Free Delivery Unlocked!
                   </span>
                 ) : (
                   <span>
@@ -348,7 +348,7 @@ export function CartDrawer() {
                     )}
                   </span>
                   <span className={shipping === 0 ? "font-bold text-emerald-700" : ""}>
-                    {shipping === 0 ? "FREE" : formatPrice(shipping, selectedCurrency)}
+                    {shipping === 0 ? "FREE Delivery" : formatPrice(shipping, selectedCurrency)}
                   </span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">

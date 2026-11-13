@@ -25,10 +25,12 @@ import {
   Ruler,
   AlertCircle,
   Video,
+  Palette,
 } from "lucide-react";
 import { storeConfig } from "@/config/store.config";
 import { PolicyModal, PolicyTab } from "@/components/storefront/PolicyModal";
 import { getProductSizeInfo } from "@/lib/productSizes";
+import { getAllColorOptionsForProduct, UnifiedColorOption } from "@/lib/productColors";
 import { Product } from "@/types/store";
 
 interface ProductDetailClientProps {
@@ -74,7 +76,13 @@ export function ProductDetailClient({
     });
   }, [cleanSlug, effectiveProducts]);
 
-  const product = matchedFromStore || initialProduct;
+  const [activeProductOverride, setActiveProductOverride] = useState<Product | null>(null);
+  const product = activeProductOverride || matchedFromStore || initialProduct;
+
+  // Reset override when URL slug changes
+  useEffect(() => {
+    setActiveProductOverride(null);
+  }, [cleanSlug]);
 
   // Keep address bar in sync if matched via plural alias (e.g. /flower-earrings -> /flower-earring)
   useEffect(() => {
@@ -172,6 +180,11 @@ export function ProductDetailClient({
 
   const sizeInfo = getProductSizeInfo(product);
 
+  const colorData = useMemo(() => {
+    if (!product) return null;
+    return getAllColorOptionsForProduct(product, effectiveProducts, selectedOptions["Color"]);
+  }, [product, effectiveProducts, selectedOptions]);
+
   // Initialize variant defaults if needed
   const currentOptions = { ...selectedOptions };
   if (product.variantAttributes) {
@@ -218,11 +231,19 @@ export function ProductDetailClient({
   const handleAddToCart = () => {
     if (isOutOfStock) return;
 
-    // Combine standard variant options with selected size
+    // Combine standard variant options with selected size and active color
     const combinedOptions: { [key: string]: string } = { ...currentOptions };
     if (sizeInfo && effectiveSize) {
       combinedOptions[sizeInfo.label] = effectiveSize;
     }
+    if (colorData && colorData.currentColorName) {
+      combinedOptions["Color"] = colorData.currentColorName;
+    }
+
+    const activeColorImg =
+      colorData?.colorOptions.find((o) => o.isCurrent)?.image ||
+      product.images[activeImageIndex] ||
+      product.images[0];
 
     const hasVariants = Object.keys(combinedOptions).length > 0;
     const variantId = hasVariants
@@ -244,6 +265,7 @@ export function ProductDetailClient({
             id: variantId || "standard",
             name: variantName || "Standard",
             options: combinedOptions,
+            image: activeColorImg,
           }
         : undefined
     );
@@ -380,7 +402,7 @@ export function ProductDetailClient({
               <p className="text-[11px] text-muted-foreground mt-1">
                 {isQatar
                   ? "Direct Qatar Order: Complimentary VIP Delivery (Within 14 Days)"
-                  : "All taxes included. Free shipping on orders ₹999+ (Kerala ₹50 • Outside Kerala ₹70)."}
+                  : "All taxes included. Free delivery on orders above ₹999 (Kerala ₹50 • Outside Kerala ₹70)."}
               </p>
             </div>
 
@@ -388,6 +410,93 @@ export function ProductDetailClient({
             <p className="text-sm text-muted-foreground leading-relaxed pt-2">
               {product.description}
             </p>
+
+            {/* Color / Finish Selection (Switch between colors to choose product) */}
+            {colorData && colorData.hasMultipleColors && (
+              <div className="space-y-3 pt-3 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                      <Palette className="w-3.5 h-3.5 text-primary" />
+                      <span>Color / Finish:</span>
+                    </span>
+                    <span className="text-xs font-bold text-primary px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                      {colorData.currentColorName}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground font-medium">
+                    {colorData.colorOptions.length} Colors Available
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {colorData.colorOptions.map((opt) => {
+                    const isSelected = opt.isCurrent;
+                    const isSoldOut = !opt.inStock || opt.stockCount <= 0;
+
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          if (opt.isLinkedProduct && opt.targetProduct) {
+                            setActiveProductOverride(opt.targetProduct);
+                            setActiveImageIndex(0);
+                            if (typeof window !== "undefined") {
+                              try {
+                                window.history.pushState(null, "", `/products/${opt.targetProduct.slug}`);
+                              } catch (e) {}
+                            }
+                          } else {
+                            setSelectedOptions((prev) => ({ ...prev, Color: opt.name }));
+                            if (opt.image && product) {
+                              const foundIdx = product.images.findIndex((img) => img === opt.image);
+                              if (foundIdx !== -1) {
+                                setActiveImageIndex(foundIdx);
+                              }
+                            }
+                          }
+                        }}
+                        className={`group relative flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/25 shadow-xs"
+                            : isSoldOut
+                            ? "border-border/60 bg-muted/30 text-muted-foreground opacity-60"
+                            : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-muted/30"
+                        }`}
+                        title={isSoldOut ? `${opt.name} (Sold Out)` : `Select ${opt.name}`}
+                      >
+                        {/* Visual Color Dot / Swatch Preview */}
+                        <span
+                          className="w-4 h-4 rounded-full shrink-0 shadow-xs border"
+                          style={{
+                            background: opt.swatch.cssBackground,
+                            borderColor: opt.swatch.borderColor || "rgba(0,0,0,0.15)",
+                          }}
+                        />
+
+                        {/* Optional Miniature Image Thumbnail Preview */}
+                        {opt.image && (
+                          <span className="w-5 h-5 rounded-md overflow-hidden border border-border/80 shrink-0 hidden xs:inline-block">
+                            <img src={opt.image} alt={opt.name} className="w-full h-full object-cover" />
+                          </span>
+                        )}
+
+                        <span className="truncate">{opt.name}</span>
+
+                        {isSoldOut && (
+                          <span className="text-[9px] font-bold text-destructive ml-0.5">✕</span>
+                        )}
+
+                        {isSelected && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary ml-0.5 shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Size Guide & Selection */}
             {sizeInfo && (
@@ -457,35 +566,40 @@ export function ProductDetailClient({
               </div>
             )}
 
-            {/* Standard Variant Attributes (Color, Polish, Metal Finish) */}
-            {product.variantAttributes && product.variantAttributes.length > 0 && (
-              <div className="space-y-4 pt-3 border-t border-border">
-                {product.variantAttributes.map((attr) => (
-                  <div key={attr.name} className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-foreground uppercase tracking-wider">{attr.name}</span>
-                      <span className="text-muted-foreground font-medium">{currentOptions[attr.name]}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {attr.options.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => setSelectedOptions((prev) => ({ ...prev, [attr.name]: opt }))}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all ${
-                            currentOptions[attr.name] === opt
-                              ? "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20"
-                              : "border-border bg-card text-foreground hover:border-muted-foreground"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Other Standard Variant Attributes (excluding Size and Color which have dedicated UI) */}
+            {product.variantAttributes &&
+              product.variantAttributes.filter(
+                (attr) => !/size/i.test(attr.name) && !/colou?r|finish|metal/i.test(attr.name)
+              ).length > 0 && (
+                <div className="space-y-4 pt-3 border-t border-border">
+                  {product.variantAttributes
+                    .filter((attr) => !/size/i.test(attr.name) && !/colou?r|finish|metal/i.test(attr.name))
+                    .map((attr) => (
+                      <div key={attr.name} className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-foreground uppercase tracking-wider">{attr.name}</span>
+                          <span className="text-muted-foreground font-medium">{currentOptions[attr.name]}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {attr.options.map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setSelectedOptions((prev) => ({ ...prev, [attr.name]: opt }))}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                                currentOptions[attr.name] === opt
+                                  ? "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20"
+                                  : "border-border bg-card text-foreground hover:border-muted-foreground"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
 
             {/* Quantity Selector */}
             <div className="pt-2">
@@ -588,7 +702,7 @@ export function ProductDetailClient({
               >
                 <Truck className="w-4 h-4 mx-auto text-primary group-hover:scale-110 transition-transform" />
                 <p className="font-bold text-foreground">DTDC & India Post</p>
-                <p className="text-[10px]">{isQatar ? "Qatar Free Delivery (Within 14 Days)" : "Pan-India ₹40 / Free ₹799+"}</p>
+                <p className="text-[10px]">{isQatar ? "Qatar Free Delivery (Within 14 Days)" : "Free Delivery Above ₹999"}</p>
               </button>
             </div>
 

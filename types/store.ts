@@ -48,6 +48,7 @@ export interface Product {
     name: string; // e.g., "Size", "Color"
     options: string[]; // e.g., ["S", "M", "L"]
     sizeStock?: Record<string, number>; // Maps specific size option to stock count (e.g. { "Size 10 (15.9 mm)": 1 })
+    colorImages?: Record<string, string>; // Maps specific color option to image URL
   }[];
   specifications?: { [key: string]: string };
   reviews?: Review[];
@@ -80,6 +81,7 @@ export interface CartItem {
     id: string;
     name: string;
     options: { [key: string]: string };
+    image?: string;
   };
 }
 

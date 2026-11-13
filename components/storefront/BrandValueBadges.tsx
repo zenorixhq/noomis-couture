@@ -241,7 +241,7 @@ export function BrandValueBadges() {
             >
               <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide sm:tracking-widest uppercase text-[#806631] truncate">
                 <span className="text-[#C5A059] text-[10px] sm:text-xs shrink-0">✦</span>
-                <span className="truncate">FREE SHIPPING ABOVE ₹999 • 5% OFF 1ST ORDER (CODE: NOOMI5)</span>
+                <span className="truncate">FREE DELIVERY ABOVE ₹999 • 5% OFF 1ST ORDER (CODE: NOOMI5)</span>
                 <span className="text-[#C5A059] text-[10px] sm:text-xs hidden md:inline shrink-0">✦</span>
               </div>
 

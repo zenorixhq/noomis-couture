@@ -6,6 +6,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { formatPrice, getProductPrices } from "@/lib/utils";
 import { X, Star, ShoppingBag, Plus, Minus, ArrowRight, ChevronDown } from "lucide-react";
 import { getProductSizeInfo } from "@/lib/productSizes";
+import { getColorSwatch } from "@/lib/productColors";
 
 export function QuickViewModal() {
   const product = useCartStore((s) => s.quickViewProduct);
@@ -238,30 +239,43 @@ export function QuickViewModal() {
               {/* Other Variant Attribute Selectors */}
               {product.variantAttributes
                 ?.filter((attr) => !/size/i.test(attr.name))
-                .map((attr) => (
-                  <div key={attr.name} className="space-y-1.5">
-                    <span className="text-xs font-semibold text-foreground">
-                      {attr.name}: <span className="font-normal text-muted-foreground">{currentOptions[attr.name]}</span>
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {attr.options.map((option) => (
-                        <button
-                          key={option}
-                          onClick={() =>
-                            setSelectedOptions({ ...currentOptions, [attr.name]: option })
-                          }
-                          className={`px-3 py-1 text-xs rounded-md font-medium border transition-all ${
-                            currentOptions[attr.name] === option
-                              ? "border-primary bg-primary text-primary-foreground font-semibold"
-                              : "border-border bg-card text-foreground hover:bg-muted"
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
+                .map((attr) => {
+                  const isColorAttr = /colou?r|finish/i.test(attr.name);
+                  return (
+                    <div key={attr.name} className="space-y-1.5">
+                      <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                        <span>{attr.name}:</span>
+                        <span className="font-bold text-primary">{currentOptions[attr.name]}</span>
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {attr.options.map((option) => {
+                          const swatch = isColorAttr ? getColorSwatch(option) : null;
+                          return (
+                            <button
+                              key={option}
+                              onClick={() =>
+                                setSelectedOptions({ ...currentOptions, [attr.name]: option })
+                              }
+                              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium border transition-all ${
+                                currentOptions[attr.name] === option
+                                  ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
+                                  : "border-border bg-card text-foreground hover:bg-muted"
+                              }`}
+                            >
+                              {swatch && (
+                                <span
+                                  className="w-3.5 h-3.5 rounded-full shrink-0 border border-black/20"
+                                  style={{ background: swatch.cssBackground }}
+                                />
+                              )}
+                              <span>{option}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
               {/* Quantity */}
               <div className="space-y-1.5 pt-2">

@@ -96,11 +96,11 @@ export function FloatingOfferPill() {
                 </span>
               </div>
 
-              {/* Free shipping line */}
+              {/* Free delivery line */}
               <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-[#EADBBE] font-medium">
                 <Truck className="w-3.5 h-3.5 text-[#C5A059] shrink-0" />
                 <span>
-                  Free Shipping Above <strong className="text-white">₹999</strong>
+                  Free Delivery Above <strong className="text-white">₹999</strong>
                 </span>
               </div>
 

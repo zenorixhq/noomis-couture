@@ -65,7 +65,7 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
     id: "shipping-courier",
     badge: "Pan-India Express",
     title: "Shipping via DTDC & India Post",
-    description: "Reliable dispatch via DTDC Express & India Post (Speed Post) with live SMS/WhatsApp tracking. Free over ₹799 (Flat ₹40).",
+    description: "Reliable dispatch via DTDC Express & India Post (Speed Post) with live SMS/WhatsApp tracking. Free delivery above ₹999 (Kerala ₹50 • Outside Kerala ₹70).",
     icon: Truck,
     policyTab: "shipping",
     linkText: "Shipping Policy",

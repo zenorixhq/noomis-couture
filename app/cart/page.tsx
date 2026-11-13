@@ -119,11 +119,11 @@ export default function CartPage() {
             {amountNeeded === 0 ? (
               <span className="text-emerald-600 font-bold flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
-                Congratulations! You qualified for Complimentary Shipping.
+                Congratulations! You qualified for Free Delivery.
               </span>
             ) : (
               <span>
-                Add <strong className="text-primary">{formatPrice(amountNeeded, selectedCurrency)}</strong> more to receive Free Shipping
+                Add <strong className="text-primary">{formatPrice(amountNeeded, selectedCurrency)}</strong> more for Free Delivery
               </span>
             )}
           </span>

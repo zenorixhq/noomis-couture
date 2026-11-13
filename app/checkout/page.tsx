@@ -492,7 +492,7 @@ export default function CheckoutPage() {
                     </h3>
                   </div>
                   <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    🇮🇳 Free Shipping Above ₹999 • Kerala ₹50 • Outside Kerala ₹70
+                    🇮🇳 Free Delivery Above ₹999 • Kerala ₹50 • Outside Kerala ₹70
                   </span>
                 </div>
 
@@ -818,7 +818,7 @@ export default function CheckoutPage() {
 
                   {shipping > 0 && subtotal < 999 && (
                     <div className="text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
-                      Add {formatPrice(999 - subtotal)} more for <strong>FREE Shipping</strong>!
+                      Add {formatPrice(999 - subtotal)} more for <strong>FREE Delivery</strong>!
                     </div>
                   )}
 

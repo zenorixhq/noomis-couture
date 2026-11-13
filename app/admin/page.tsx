@@ -8,6 +8,7 @@ import { useProductStore } from "@/store/useProductStore";
 import { formatPrice } from "@/lib/utils";
 import { Order, OrderStatus, Product, Category } from "@/types/store";
 import { RING_SPECIFIC_SIZES, BANGLE_SPECIFIC_SIZES } from "@/lib/productSizes";
+import { getColorSwatch, getLinkedColorProducts } from "@/lib/productColors";
 
 const isRingCategory = (cat: string) => cat === "rings" || cat === "ring";
 const isBangleCategory = (cat: string) =>
@@ -265,6 +266,8 @@ export default function AdminDashboardPage() {
     sizingType: "adjustable" | "sizes";
     selectedSizes: string[];
     sizeStock: Record<string, number>;
+    selectedColors: string[];
+    colorImages: Record<string, string>;
   }>({
     title: "",
     category: "bracelets",
@@ -282,8 +285,11 @@ export default function AdminDashboardPage() {
     sizingType: "adjustable",
     selectedSizes: [...RING_SPECIFIC_SIZES],
     sizeStock: {},
+    selectedColors: [],
+    colorImages: {},
   });
   const [newImageUrlInput, setNewImageUrlInput] = useState("");
+  const [customColorInput, setCustomColorInput] = useState("");
 
   const fetchReviewsAndVideos = () => {
     fetch("/api/reviews")
@@ -1669,8 +1675,11 @@ export default function AdminDashboardPage() {
       sizingType: "adjustable",
       selectedSizes: initialRingSizes,
       sizeStock: initialSizeStock,
+      selectedColors: [],
+      colorImages: {},
     });
     setNewImageUrlInput("");
+    setCustomColorInput("");
     setIsModalOpen(true);
   };
 
@@ -1746,6 +1755,11 @@ export default function AdminDashboardPage() {
 
     const isCurrentlySignature = signatureCoutureIds.includes(product.id) || Boolean(product.inSignatureCouture);
 
+    // Extract color variants if configured
+    const explicitColorAttr = product.variantAttributes?.find((a) => /colou?r|finish/i.test(a.name));
+    const initialColors = explicitColorAttr ? [...(explicitColorAttr.options || [])] : [];
+    const initialColorImages = explicitColorAttr?.colorImages ? { ...explicitColorAttr.colorImages } : {};
+
     setFormState({
       title: product.title,
       category: normalizedCategory,
@@ -1763,8 +1777,11 @@ export default function AdminDashboardPage() {
       sizingType: detectedSizingType,
       selectedSizes,
       sizeStock,
+      selectedColors: initialColors,
+      colorImages: initialColorImages,
     });
     setNewImageUrlInput("");
+    setCustomColorInput("");
     setIsModalOpen(true);
   };
 
@@ -1944,6 +1961,16 @@ export default function AdminDashboardPage() {
             sizeStock: activeSizeStock,
           });
         }
+      }
+
+      // Handle Color variant attribute
+      variantAttributes = variantAttributes.filter((a) => !/colou?r|finish/i.test(a.name));
+      if (formState.selectedColors && formState.selectedColors.length > 0) {
+        variantAttributes.push({
+          name: "Color",
+          options: formState.selectedColors,
+          colorImages: formState.colorImages || {},
+        });
       }
 
       const finalImages = formState.images.length > 0
@@ -2910,7 +2937,7 @@ export default function AdminDashboardPage() {
                   <p>
                     🇮🇳 India (INR ₹):{" "}
                     <strong className="text-foreground">
-                      Free Shipping on orders above ₹{storeConfig.commerce.freeShippingThreshold} (Kerala ₹50 • Outside Kerala ₹70 below)
+                      Free delivery on orders above ₹{storeConfig.commerce.freeShippingThreshold} (Kerala ₹50 • Outside Kerala ₹70 below)
                     </strong>
                   </p>
                   <p>Ordering Method: <strong className="text-foreground">Razorpay Instant Gateway Checkout (Cards, UPI, Netbanking)</strong></p>
@@ -4775,6 +4802,241 @@ export default function AdminDashboardPage() {
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* Color & Finish Options */}
+              <div className="space-y-3 border border-border p-4 rounded-xl bg-muted/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-border/60 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold text-foreground">
+                      Color / Finish Choices ({formState.selectedColors.length} configured)
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-medium">
+                    Customers switch colors directly on product page
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Choose available color or finish options for this piece (e.g. Gold, Silver, Rose Gold). Customers can switch colors seamlessly on the product page and choose their preferred color.
+                </p>
+
+                {/* Popular Jewelry Colors Quick-Add Chips */}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-semibold text-foreground">Popular Jewelry Colors:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      "Gold",
+                      "Silver",
+                      "Rose Gold",
+                      "White",
+                      "Black",
+                      "Red",
+                      "Emerald Green",
+                      "Blue",
+                      "Pink",
+                      "Two-Tone",
+                    ].map((cName) => {
+                      const swatch = getColorSwatch(cName);
+                      const isSelected = formState.selectedColors.includes(cName);
+                      return (
+                        <button
+                          key={cName}
+                          type="button"
+                          onClick={() => {
+                            setFormState((prev) => {
+                              const exists = prev.selectedColors.includes(cName);
+                              const updatedColors = exists
+                                ? prev.selectedColors.filter((c) => c !== cName)
+                                : [...prev.selectedColors, cName];
+                              const updatedColorImages = { ...prev.colorImages };
+                              if (exists) {
+                                delete updatedColorImages[cName];
+                              }
+                              return {
+                                ...prev,
+                                selectedColors: updatedColors,
+                                colorImages: updatedColorImages,
+                              };
+                            });
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs ring-1 ring-primary/40"
+                              : "bg-background text-foreground border-border hover:bg-muted/60"
+                          }`}
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                            style={{ background: swatch.cssBackground }}
+                          />
+                          <span>{cName}</span>
+                          {isSelected && <Check className="w-3 h-3 ml-0.5" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Color Input */}
+                <div className="flex gap-2 items-center pt-1">
+                  <input
+                    type="text"
+                    placeholder="Add custom color (e.g. Lavender, Turquoise)..."
+                    value={customColorInput}
+                    onChange={(e) => setCustomColorInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const trimmed = customColorInput.trim();
+                        if (trimmed && !formState.selectedColors.includes(trimmed)) {
+                          setFormState((prev) => ({
+                            ...prev,
+                            selectedColors: [...prev.selectedColors, trimmed],
+                          }));
+                          setCustomColorInput("");
+                        }
+                      }
+                    }}
+                    className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const trimmed = customColorInput.trim();
+                      if (trimmed && !formState.selectedColors.includes(trimmed)) {
+                        setFormState((prev) => ({
+                          ...prev,
+                          selectedColors: [...prev.selectedColors, trimmed],
+                        }));
+                        setCustomColorInput("");
+                      }
+                    }}
+                    disabled={!customColorInput.trim()}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/85 transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    + Add Color
+                  </button>
+                </div>
+
+                {/* Configured Colors List & Photo Assignment */}
+                {formState.selectedColors.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border/60">
+                    <span className="text-[11px] font-semibold text-foreground">
+                      Active Colors & Photo Linking (Optional):
+                    </span>
+                    <div className="space-y-2">
+                      {formState.selectedColors.map((colorName) => {
+                        const swatch = getColorSwatch(colorName);
+                        const assignedPhoto = formState.colorImages[colorName] || "";
+                        return (
+                          <div
+                            key={colorName}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg bg-background border border-border"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="w-4 h-4 rounded-full border border-black/25 shrink-0"
+                                style={{ background: swatch.cssBackground }}
+                              />
+                              <span className="text-xs font-bold text-foreground">{colorName}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {formState.images.length > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                  <label className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                    Display Photo:
+                                  </label>
+                                  <select
+                                    value={assignedPhoto}
+                                    onChange={(e) => {
+                                      const photoUrl = e.target.value;
+                                      setFormState((prev) => {
+                                        const updated = { ...prev.colorImages };
+                                        if (photoUrl) {
+                                          updated[colorName] = photoUrl;
+                                        } else {
+                                          delete updated[colorName];
+                                        }
+                                        return { ...prev, colorImages: updated };
+                                      });
+                                    }}
+                                    className="text-xs px-2 py-1 rounded bg-muted/40 border border-border text-foreground outline-none max-w-[180px]"
+                                  >
+                                    <option value="">Default (First Photo)</option>
+                                    {formState.images.map((img, i) => (
+                                      <option key={i} value={img}>
+                                        Photo {i + 1} {i === 0 ? "(Cover)" : ""}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormState((prev) => {
+                                    const updatedColors = prev.selectedColors.filter((c) => c !== colorName);
+                                    const updatedColorImages = { ...prev.colorImages };
+                                    delete updatedColorImages[colorName];
+                                    return {
+                                      ...prev,
+                                      selectedColors: updatedColors,
+                                      colorImages: updatedColorImages,
+                                    };
+                                  });
+                                }}
+                                className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+                                title="Remove color"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Auto-Linked Catalog Products Preview */}
+                {editingProduct && (() => {
+                  const linkedItems = getLinkedColorProducts(editingProduct, products);
+                  if (linkedItems.length <= 1) return null;
+                  return (
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Auto-Linked Color Pieces in Catalog ({linkedItems.length})</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        Our smart color matcher detected these pieces sharing this design in your catalog. Customers can switch between them seamlessly on the storefront:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {linkedItems.map((item) => (
+                          <span
+                            key={item.id}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
+                              item.isCurrent
+                                ? "bg-primary/20 text-primary border-primary/40 font-bold"
+                                : "bg-background text-foreground border-border"
+                            }`}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full border border-black/20"
+                              style={{ background: item.swatch.cssBackground }}
+                            />
+                            <span>{item.name}</span>
+                            {item.isCurrent && <span className="text-[9px] opacity-75">(Editing)</span>}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Descriptions */}

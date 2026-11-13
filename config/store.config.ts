@@ -150,7 +150,7 @@ export const storeConfig: StoreConfig = {
     enableQuickView: true,
     enableStockBadges: true,
     enableAnnouncementBar: true,
-    announcementText: "✨ Noomi's Couture • Free Shipping Above ₹999 • 5% OFF On 1st Order with Code NOOMI5 • 100% Anti-Tarnish & Waterproof",
+    announcementText: "✨ Noomi's Couture • Free Delivery Above ₹999 • 5% OFF On 1st Order with Code NOOMI5 • 100% Anti-Tarnish & Waterproof",
     enableWhatsAppFloat: true,
     enableCurrencySwitcher: false,
   },

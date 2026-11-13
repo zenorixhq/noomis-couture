@@ -91,7 +91,7 @@ export const useCartStore = create<CartStore>()(
             title: product.title,
             slug: product.slug,
             price: indiaPrice,
-            image: product.images[0],
+            image: normalizedVariant?.image || product.images[0],
             quantity: Math.min(availableStock, quantity),
             stockCount: availableStock,
             selectedVariant: normalizedVariant,
