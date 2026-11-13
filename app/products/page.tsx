@@ -26,6 +26,12 @@ function matchesCategory(
   const pCat = (product.category || "").trim().toLowerCase();
   const tSlug = (targetSlug || "").trim().toLowerCase();
 
+  if (tSlug === "bangles" || tSlug === "bangles-kada") {
+    return pCat === "bangles" || pCat === "bangles-kada" || pCat.includes("bangle") || pCat.includes("kada");
+  }
+  if (tSlug === "necklaces" || tSlug === "necklaces-and-chains") {
+    return pCat === "necklaces" || pCat === "necklaces-and-chains" || pCat.includes("necklace") || pCat.includes("chain");
+  }
   if (tSlug === "bracelets") {
     return pCat === "bracelets" || pCat.includes("bracelet");
   }
@@ -221,6 +227,15 @@ function ProductCatalogContent() {
     priceRange !== "all" ||
     inStockOnly;
 
+  const sortedCategoryList = useMemo(() => {
+    return [...categoryList].sort((a, b) => {
+      const orderA = typeof a.order === "number" ? a.order : 999;
+      const orderB = typeof b.order === "number" ? b.order : 999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }, [categoryList]);
+
   const currentCategoryName = useMemo(() => {
     if (selectedCategory === "all") return "All Jewelry";
     const found = categoryList.find((c) => c.slug === selectedCategory);
@@ -252,7 +267,7 @@ function ProductCatalogContent() {
           All
         </button>
 
-        {categoryList.map((cat) => (
+        {sortedCategoryList.map((cat) => (
           <button
             key={cat.id || cat.slug}
             onClick={() => setSelectedCategory(cat.slug)}

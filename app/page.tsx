@@ -10,6 +10,9 @@ import { CustomerReviewsWithVideos } from "@/components/storefront/CustomerRevie
 import { InstagramReelSection } from "@/components/storefront/InstagramReelSection";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 
+const sortCats = (list: Category[]) =>
+  [...list].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
 export default function HomePage() {
   const [categoryItems, setCategoryItems] = useState<Category[]>(() => {
     if (typeof window !== "undefined") {
@@ -17,11 +20,11 @@ export default function HomePage() {
         const cached = sessionStorage.getItem("noomis_categories");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) return sortCats(parsed);
         }
       } catch (e) {}
     }
-    return initialCategories;
+    return sortCats(initialCategories);
   });
 
   useEffect(() => {
@@ -29,9 +32,10 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setCategoryItems(data);
+          const sorted = sortCats(data);
+          setCategoryItems(sorted);
           try {
-            sessionStorage.setItem("noomis_categories", JSON.stringify(data));
+            sessionStorage.setItem("noomis_categories", JSON.stringify(sorted));
           } catch (e) {}
         }
       })

@@ -63,6 +63,7 @@ export interface Category {
   description: string;
   image: string;
   productCount: number;
+  order?: number;
 }
 
 export interface CartItem {

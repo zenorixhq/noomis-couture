@@ -2,12 +2,31 @@ import { Product, Category, Order } from "@/types/store";
 
 export const categories: Category[] = [
   {
+    "id": "cat-bangles",
+    "slug": "bangles",
+    "name": "Bangles",
+    "description": "Rigid luxury bangles, open-cuff kadas, and screw-lock everyday bangles in 316L steel.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/bangles-kada-1793372909246.jpg",
+    "productCount": 0,
+    "order": 1
+  },
+  {
+    "id": "cat-necklaces",
+    "slug": "necklaces",
+    "name": "Necklaces",
+    "description": "Interchangeable charm necklaces, dainty lockets, and radiant everyday pieces in 316L steel.",
+    "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/necklaces-and-chains-1793372908704.jpg",
+    "productCount": 0,
+    "order": 2
+  },
+  {
     "id": "cat-bracelets",
     "slug": "bracelets",
     "name": "Bracelets",
     "description": "Waterproof clover bracelets, paperclip chains, and link cuffs.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/bracelets-1793372908945.jpg",
-    "productCount": 19
+    "productCount": 19,
+    "order": 3
   },
   {
     "id": "cat-pendants",
@@ -15,7 +34,8 @@ export const categories: Category[] = [
     "name": "Pendants",
     "description": "Solitaire stones, clover medallions, and minimal layering pendants.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/necklaces-and-chains-1793372908704.jpg",
-    "productCount": 12
+    "productCount": 12,
+    "order": 4
   },
   {
     "id": "cat-watches",
@@ -23,7 +43,8 @@ export const categories: Category[] = [
     "name": "Watches",
     "description": "Refined minimalist luxury timepieces with stainless steel waterproof mesh and link bracelets.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/watches-1793372909299.jpg",
-    "productCount": 0
+    "productCount": 0,
+    "order": 5
   },
   {
     "id": "cat-rings",
@@ -31,7 +52,8 @@ export const categories: Category[] = [
     "name": "Rings",
     "description": "Waterproof adjustable rings, statement bands, and stackable sets.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/rings-1793372908809.jpg",
-    "productCount": 11
+    "productCount": 11,
+    "order": 6
   },
   {
     "id": "cat-hand-chains",
@@ -39,7 +61,8 @@ export const categories: Category[] = [
     "name": "Hand Chains",
     "description": "Delicate ring-to-wrist hand harness chains in radiant 18K mirror gold finish.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/hip-chains-1793372909411.jpg",
-    "productCount": 0
+    "productCount": 0,
+    "order": 7
   },
   {
     "id": "cat-anklets",
@@ -47,7 +70,8 @@ export const categories: Category[] = [
     "name": "Anklets",
     "description": "Boho bead anklets, butterfly charms, and shimmering multi-diamond anklets.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/anklets-1793372909460.jpg",
-    "productCount": 0
+    "productCount": 0,
+    "order": 8
   },
   {
     "id": "cat-earrings",
@@ -55,7 +79,8 @@ export const categories: Category[] = [
     "name": "Earrings",
     "description": "Hypoallergenic hoops, contemporary drop earrings, and dainty daily studs.",
     "image": "https://8chqcadpyfsk8arj.public.blob.vercel-storage.com/categories/earrings-1793372908889.jpg",
-    "productCount": 9
+    "productCount": 9,
+    "order": 9
   },
   {
     "id": "cat-mangalsutra",
@@ -63,7 +88,8 @@ export const categories: Category[] = [
     "name": "Mangalsutra",
     "description": "Modern minimalist mangalsutra designs in waterproof 316L steel with auspicious black beads.",
     "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800",
-    "productCount": 0
+    "productCount": 0,
+    "order": 10
   }
 ];
 

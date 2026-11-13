@@ -12,6 +12,8 @@ import { RING_SPECIFIC_SIZES, BANGLE_SPECIFIC_SIZES } from "@/lib/productSizes";
 const isRingCategory = (cat: string) => cat === "rings" || cat === "ring";
 const isBangleCategory = (cat: string) =>
   cat === "bangles-kada" || cat === "bangles" || cat === "bangle" || cat === "kada" || cat === "kadas";
+const isNecklaceCategory = (cat: string) =>
+  cat === "necklaces-and-chains" || cat === "necklaces" || cat === "necklace" || cat === "chains" || cat === "chain";
 const isSizableCategory = (cat: string) => isRingCategory(cat) || isBangleCategory(cat);
 import {
   TrendingUp,
@@ -116,14 +118,32 @@ export default function AdminDashboardPage() {
   });
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryForm, setCategoryForm] = useState({
+  const [categoryForm, setCategoryForm] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    image: string;
+    order?: number | "";
+  }>({
     id: "",
     name: "",
     slug: "",
     description: "",
     image: "",
+    order: "",
   });
   const [updatingCatId, setUpdatingCatId] = useState<string | null>(null);
+
+  // Sorted categories by order numbering (1 = first, 2 = second, etc.)
+  const sortedCategories = useMemo(() => {
+    return [...categoriesList].sort((a, b) => {
+      const orderA = typeof a.order === "number" ? a.order : 999;
+      const orderB = typeof b.order === "number" ? b.order : 999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }, [categoriesList]);
 
   // Reviews, Video Reels, Screenshots & Instagram Videos State
   const [reviewsList, setReviewsList] = useState<any[]>(() => {
@@ -1441,12 +1461,14 @@ export default function AdminDashboardPage() {
 
   const handleOpenEditCategory = (cat: Category) => {
     setEditingCategory(cat);
+    const sortedIdx = sortedCategories.findIndex((c) => c.id === cat.id || c.slug === cat.slug);
     setCategoryForm({
       id: cat.id,
       name: cat.name,
       slug: cat.slug,
       description: cat.description || "",
       image: cat.image,
+      order: cat.order !== undefined ? cat.order : (sortedIdx >= 0 ? sortedIdx + 1 : ""),
     });
     setIsCategoryModalOpen(true);
   };
@@ -1459,8 +1481,56 @@ export default function AdminDashboardPage() {
       slug: "",
       description: "",
       image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=800",
+      order: sortedCategories.length + 1,
     });
     setIsCategoryModalOpen(true);
+  };
+
+  const handleUpdateCategoryOrder = async (catId: string, newOrder: number) => {
+    const validOrder = Math.max(1, newOrder);
+    const updated = categoriesList.map((c) => {
+      if (c.id === catId || c.slug === catId) {
+        return { ...c, order: validOrder };
+      }
+      return c;
+    });
+    updated.sort((a, b) => (Number(a.order ?? 999)) - (Number(b.order ?? 999)));
+    setCategoriesList(updated);
+    try {
+      sessionStorage.setItem("noomis_categories", JSON.stringify(updated));
+      await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categories: updated }),
+      });
+    } catch (e) {
+      console.error("Failed to save reordered categories:", e);
+    }
+  };
+
+  const handleMoveCategory = async (catId: string, direction: "up" | "down") => {
+    const list = [...sortedCategories];
+    const idx = list.findIndex((c) => c.id === catId || c.slug === catId);
+    if (idx < 0) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+
+    const temp = list[idx];
+    list[idx] = list[targetIdx];
+    list[targetIdx] = temp;
+
+    const reordered = list.map((c, i) => ({ ...c, order: i + 1 }));
+    setCategoriesList(reordered);
+    try {
+      sessionStorage.setItem("noomis_categories", JSON.stringify(reordered));
+      await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categories: reordered }),
+      });
+    } catch (e) {
+      console.error("Failed to save swapped categories:", e);
+    }
   };
 
   const handleCategoryModalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1484,11 +1554,15 @@ export default function AdminDashboardPage() {
     }
     setIsSavingItem(true);
     try {
+      const payload = {
+        ...categoryForm,
+        order: categoryForm.order !== "" && categoryForm.order !== undefined ? Number(categoryForm.order) : undefined,
+      };
       if (editingCategory) {
         const res = await fetch("/api/categories", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(categoryForm),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (Array.isArray(data.categories)) {
@@ -1496,7 +1570,8 @@ export default function AdminDashboardPage() {
           try { sessionStorage.setItem("noomis_categories", JSON.stringify(data.categories)); } catch (e) {}
         } else {
           setCategoriesList((prev) => {
-            const updated = prev.map((c) => (c.id === categoryForm.id ? { ...c, ...categoryForm } : c));
+            const updated = prev.map((c) => (c.id === categoryForm.id ? { ...c, ...payload } : c));
+            updated.sort((a, b) => (Number(a.order ?? 999)) - (Number(b.order ?? 999)));
             try { sessionStorage.setItem("noomis_categories", JSON.stringify(updated)); } catch (e) {}
             return updated;
           });
@@ -1505,7 +1580,7 @@ export default function AdminDashboardPage() {
         const res = await fetch("/api/categories", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(categoryForm),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (Array.isArray(data.categories)) {
@@ -1513,7 +1588,8 @@ export default function AdminDashboardPage() {
           try { sessionStorage.setItem("noomis_categories", JSON.stringify(data.categories)); } catch (e) {}
         } else {
           setCategoriesList((prev) => {
-            const updated = [...prev, { ...categoryForm, productCount: 0 }];
+            const updated = [...prev, { ...payload, productCount: 0 }];
+            updated.sort((a, b) => (Number(a.order ?? 999)) - (Number(b.order ?? 999)));
             try { sessionStorage.setItem("noomis_categories", JSON.stringify(updated)); } catch (e) {}
             return updated;
           });
@@ -1949,7 +2025,7 @@ export default function AdminDashboardPage() {
     const list: { slug: string; name: string; count: number }[] = [];
     const seenSlugs = new Set<string>();
 
-    categoriesList.forEach((c) => {
+    sortedCategories.forEach((c) => {
       const slug = (c.slug || "").toLowerCase().trim();
       if (!slug || seenSlugs.has(slug)) return;
       seenSlugs.add(slug);
@@ -1960,10 +2036,13 @@ export default function AdminDashboardPage() {
         const isBangle =
           (slug === "bangles" || slug === "bangles-kada") &&
           (pCat === "bangles" || pCat === "bangles-kada" || pCat === "bangle" || pCat === "kada");
+        const isNecklace =
+          (slug === "necklaces" || slug === "necklaces-and-chains" || slug === "necklaces-chains") &&
+          (pCat === "necklaces" || pCat === "necklace" || pCat === "necklaces-and-chains" || pCat === "necklaces-chains" || pCat === "chain" || pCat === "chains");
         const isRing =
           (slug === "rings" || slug === "ring") &&
           (pCat === "rings" || pCat === "ring");
-        if (pCat === slug || pCat === c.name.toLowerCase().trim() || isBangle || isRing) {
+        if (pCat === slug || pCat === c.name.toLowerCase().trim() || isBangle || isNecklace || isRing) {
           count++;
         }
       });
@@ -1975,7 +2054,7 @@ export default function AdminDashboardPage() {
       });
     });
 
-    // Also include any categories in products not explicitly in categoriesList
+    // Also include any categories in products not explicitly in sortedCategories
     products.forEach((p) => {
       const cat = (p.category || "").trim();
       if (!cat) return;
@@ -1995,7 +2074,7 @@ export default function AdminDashboardPage() {
     });
 
     return list;
-  }, [categoriesList, products]);
+  }, [sortedCategories, products]);
 
   const filteredInventory = useMemo(() => {
     return products.filter((p) => {
@@ -2008,6 +2087,9 @@ export default function AdminDashboardPage() {
         const isBangleMatch =
           (filterCat === "bangles" || filterCat === "bangles-kada") &&
           (pCat === "bangles" || pCat === "bangles-kada" || pCat === "bangle" || pCat === "kada");
+        const isNecklaceMatch =
+          (filterCat === "necklaces" || filterCat === "necklaces-and-chains" || filterCat === "necklaces-chains") &&
+          (pCat === "necklaces" || pCat === "necklace" || pCat === "necklaces-and-chains" || pCat === "necklaces-chains" || pCat === "chain" || pCat === "chains");
         const isRingMatch =
           (filterCat === "rings" || filterCat === "ring") &&
           (pCat === "rings" || pCat === "ring");
@@ -2017,7 +2099,7 @@ export default function AdminDashboardPage() {
         );
         const isNameMatch = targetCatObj && pCat === targetCatObj.name.toLowerCase().trim();
 
-        if (!isDirectMatch && !isBangleMatch && !isRingMatch && !isNameMatch) {
+        if (!isDirectMatch && !isBangleMatch && !isNecklaceMatch && !isRingMatch && !isNameMatch) {
           return false;
         }
       }
@@ -3374,7 +3456,7 @@ export default function AdminDashboardPage() {
 
             {/* Grid of Homepage Category Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {categoriesList.map((cat, index) => (
+              {sortedCategories.map((cat, index) => (
                 <div
                   key={cat.id || cat.slug || index}
                   className="group relative rounded-xl border border-border/80 bg-background overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
@@ -3388,13 +3470,41 @@ export default function AdminDashboardPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
 
-                    {/* Order Index Badge */}
-                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[10px] font-semibold text-white/90 border border-white/10">
-                      Card #{index + 1}
+                    {/* Order Index Badge & Quick Move Up/Down */}
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 text-white shadow-md z-10">
+                      <span className="text-[11px] font-bold text-amber-300">
+                        #{cat.order ?? index + 1}
+                      </span>
+                      <div className="flex items-center gap-0.5 ml-1 border-l border-white/25 pl-1">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveCategory(cat.id || cat.slug, "up");
+                          }}
+                          className="w-4 h-4 rounded flex items-center justify-center hover:bg-white/20 disabled:opacity-25 disabled:hover:bg-transparent text-[9px] transition-colors leading-none"
+                          title="Move category up (#1 comes first)"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index === sortedCategories.length - 1}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveCategory(cat.id || cat.slug, "down");
+                          }}
+                          className="w-4 h-4 rounded flex items-center justify-center hover:bg-white/20 disabled:opacity-25 disabled:hover:bg-transparent text-[9px] transition-colors leading-none"
+                          title="Move category down"
+                        >
+                          ▼
+                        </button>
+                      </div>
                     </div>
 
                     {/* Quick Direct Upload Overlay / Button */}
-                    <div className="absolute top-2.5 right-2.5">
+                    <div className="absolute top-2.5 right-2.5 z-10">
                       <label
                         htmlFor={`cat-img-upload-${cat.id}`}
                         className={`px-2.5 py-1.5 rounded-lg bg-black/70 hover:bg-black text-white text-[11px] font-medium backdrop-blur-sm border border-white/20 shadow-md cursor-pointer flex items-center gap-1.5 transition-all ${
@@ -3445,7 +3555,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Card Actions & Info Bar */}
-                  <div className="p-3 bg-card border-t border-border flex flex-col gap-2 mt-auto">
+                  <div className="p-3 bg-card border-t border-border flex flex-col gap-2.5 mt-auto">
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <span className="font-bold text-sm text-foreground block truncate">
@@ -3466,13 +3576,46 @@ export default function AdminDashboardPage() {
                       </Link>
                     </div>
 
+                    {/* Category Order Numbering Control */}
+                    <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-muted/40 border border-border/60">
+                      <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                        <span>Display Order:</span>
+                        <span className="font-bold text-primary">#{cat.order ?? index + 1}</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground font-medium">Rank:</span>
+                        <input
+                          type="number"
+                          min={1}
+                          defaultValue={cat.order ?? index + 1}
+                          key={`cat-order-input-${cat.id}-${cat.order ?? index + 1}`}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val > 0 && val !== (cat.order ?? index + 1)) {
+                              handleUpdateCategoryOrder(cat.id || cat.slug, val);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              const val = parseInt((e.target as HTMLInputElement).value, 10);
+                              if (!isNaN(val) && val > 0 && val !== (cat.order ?? index + 1)) {
+                                handleUpdateCategoryOrder(cat.id || cat.slug, val);
+                              }
+                            }
+                          }}
+                          className="w-12 h-6 text-center text-xs font-bold rounded border border-border bg-background focus:ring-1 focus:ring-primary outline-none"
+                          title="Type order number (1 = first) and hit Enter or click outside"
+                        />
+                      </div>
+                    </div>
+
                     {/* Prominent Edit & Remove Action Buttons */}
                     <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/50">
                       <button
                         type="button"
                         onClick={() => handleOpenEditCategory(cat)}
                         className="w-full px-2.5 py-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                        title="Edit category details"
+                        title="Edit category details and order"
                       >
                         <Pencil className="w-3 h-3" />
                         <span>Edit</span>
@@ -4129,7 +4272,7 @@ export default function AdminDashboardPage() {
                     }}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
                   >
-                    {categoriesList.map((c) => (
+                    {sortedCategories.map((c) => (
                       <option key={c.id || c.slug} value={c.slug}>
                         {c.name}
                       </option>
@@ -5552,6 +5695,25 @@ export default function AdminDashboardPage() {
                   value={categoryForm.description}
                   onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
                   className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground">Display Order / Numbering *</label>
+                  <span className="text-[10px] text-muted-foreground">Order position (1 = first, 2 = second, etc.)</span>
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  placeholder="1"
+                  value={categoryForm.order ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
+                    setCategoryForm({ ...categoryForm, order: isNaN(val as number) ? "" : val });
+                  }}
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-background border border-border focus:ring-1 focus:ring-primary outline-none font-semibold"
                 />
               </div>
 

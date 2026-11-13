@@ -86,6 +86,16 @@ export function Footer() {
             </h5>
             <ul className="space-y-2 text-xs sm:text-[13px] text-stone-400">
               <li>
+                <Link href="/products?category=bangles" className="hover:text-white transition-colors">
+                  Bangles
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=necklaces" className="hover:text-white transition-colors">
+                  Necklaces
+                </Link>
+              </li>
+              <li>
                 <Link href="/products?category=bracelets" className="hover:text-white transition-colors">
                   Bracelets
                 </Link>
