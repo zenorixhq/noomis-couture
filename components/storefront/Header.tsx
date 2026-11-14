@@ -70,7 +70,7 @@ export function Header() {
   // Track scroll position for sticky glass header styling & warm up product catalog silently
   useEffect(() => {
     setMounted(true);
-    useProductStore.getState().fetchProducts();
+    useProductStore.getState().fetchProducts(true);
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {

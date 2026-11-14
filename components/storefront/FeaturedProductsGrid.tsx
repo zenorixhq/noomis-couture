@@ -18,11 +18,9 @@ export function FeaturedProductsGrid() {
   const [activeTab, setActiveTab] = useState<"all" | "featured" | "bestseller">("all");
 
   useEffect(() => {
-    if (!hasLoaded) {
-      fetchProducts();
-    }
+    fetchProducts(true);
     fetchSignatureCouture();
-  }, [hasLoaded, fetchProducts, fetchSignatureCouture]);
+  }, [fetchProducts, fetchSignatureCouture]);
 
   // Sort and filter to exactly 6 products (3*2 grid) honoring admin's selected Signature Couture items
   const displayProducts = useMemo(() => {
