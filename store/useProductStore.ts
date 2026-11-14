@@ -2,12 +2,12 @@ import { create } from "zustand";
 import { Product } from "@/types/store";
 import { products as fallbackProducts } from "@/data/mockData";
 
-const STORAGE_KEY = "noomis_catalog_live_v10";
+const STORAGE_KEY = "noomis_catalog_live_v11";
 
 // Auto-purge obsolete and legacy catalog cache keys from previous versions
 if (typeof window !== "undefined") {
   try {
-    for (let i = 1; i <= 9; i++) {
+    for (let i = 1; i <= 10; i++) {
       localStorage.removeItem(`noomis_catalog_live_v${i}`);
       sessionStorage.removeItem(`noomis_catalog_live_v${i}`);
       localStorage.removeItem(`noomis_products_catalog_v${i}`);
@@ -23,18 +23,13 @@ function getInitialProducts(): { products: Product[]; hasLoaded: boolean } {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const isStale =
-            parsed.length > 42 ||
-            parsed.some(
-              (p: any) =>
-                p.slug === "imperial-emerald-cuban-pendant" ||
-                p.title === "Statement Ring" ||
-                p.slug === "statement-ring" ||
-                p.title === "Imperial Emerald & Gold Cuban Pendant" ||
-                p.category === "bangles-kada" ||
-                p.category === "necklaces-and-chains" ||
-                p.category === "charms"
-            );
+          const isStale = parsed.some(
+            (p: any) =>
+              p.slug === "imperial-emerald-cuban-pendant" ||
+              p.title === "Statement Ring" ||
+              p.slug === "statement-ring" ||
+              p.title === "Imperial Emerald & Gold Cuban Pendant"
+          );
           if (!isStale) {
             return { products: parsed, hasLoaded: true };
           }
